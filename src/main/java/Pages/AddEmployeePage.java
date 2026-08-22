@@ -15,11 +15,7 @@ public class AddEmployeePage extends BasePage {
     private final By lastNameField = By.name("lastName");
     private final By employeeIdField = inputByLabel("Employee Id");
     private final By saveButton = By.cssSelector("button[type='submit']");
-    private final By cancelButton = By.xpath("//button[normalize-space()='Cancel']");
     private final By formHeading = By.xpath("//h6[normalize-space()='Add Employee']");
-
-    private String saveToastText = "";
-    private boolean saveToastWasSuccess = false;
 
     @Step("Open PIM > Add Employee")
     public AddEmployeePage open() {
@@ -33,7 +29,6 @@ public class AddEmployeePage extends BasePage {
                 && ElementsActions.isDisplayed(driver, firstNameField);
     }
 
-    /** OrangeHRM pre-fills a suggested employee id; the tests overwrite it. */
     public String getPrefilledEmployeeId() {
         return ElementsActions.getValue(driver, employeeIdField);
     }
@@ -71,31 +66,17 @@ public class AddEmployeePage extends BasePage {
         return this;
     }
 
-    @Step("Save the new employee")
-    public AddEmployeePage clickSave() {
-        ElementsActions.clickElement(driver, saveButton);
-        Waits.waitForLoaderToDisappear(driver);
-        return this;
-    }
-
-    /**
-     * Saves and waits for the redirect to the created employee's record.
-     * That redirect -- not the toast -- is the first real evidence the record
-     * was persisted, because the URL carries the server-assigned empNumber.
-     *
-     * The toast is read HERE, immediately after the click, and cached. It
-     * auto-dismisses after a few seconds, so asserting on it once the redirect
-     * and the record load have completed is a race the test loses more often
-     * than it wins -- and it fails as "no success message" rather than as the
-     * timing problem it actually is.
-     */
     @Step("Save {employee} and open the created record")
     public EmployeeDetailsPage saveAndOpenRecord(DataFactory.Employee employee) {
         fillForm(employee);
         ElementsActions.clickElement(driver, saveButton);
 
-        saveToastText = ElementsActions.getToastMessage(driver);
-        saveToastWasSuccess = !saveToastText.isBlank()
+        // Read immediately after the click, before any wait. OrangeHRM toasts
+        // auto-dismiss well before the record page finishes loading, so asking for
+        // the toast once the page has settled loses it -- and the failure then
+        // reads "no success message" rather than "we looked too late".
+        String saveToastText = ElementsActions.getToastMessage(driver);
+        boolean saveToastWasSuccess = !saveToastText.isBlank()
                 && !Waits.isElementVisible(driver, By.cssSelector(".oxd-toast--error"), 1);
 
         Waits.waitForUrlContains(driver, "viewPersonalDetails");
@@ -107,16 +88,6 @@ public class AddEmployeePage extends BasePage {
         return details;
     }
 
-    /** Toast text captured at the moment of saving, before it auto-dismissed. */
-    public String getSaveToastText() {
-        return saveToastText;
-    }
-
-    public boolean wasSaveSuccessful() {
-        return saveToastWasSuccess;
-    }
-
-    /** Saves expecting the form to reject the input; stays on Add Employee. */
     @Step("Save expecting a validation failure")
     public AddEmployeePage saveExpectingValidationError() {
         ElementsActions.clickElement(driver, saveButton);
@@ -125,12 +96,5 @@ public class AddEmployeePage extends BasePage {
 
     public boolean isStillOnAddEmployeePage() {
         return driver.getCurrentUrl().contains("addEmployee");
-    }
-
-    @Step("Cancel out of the form")
-    public PimEmployeeListPage clickCancel() {
-        ElementsActions.clickElement(driver, cancelButton);
-        Waits.waitForUrlContains(driver, "viewEmployeeList");
-        return new PimEmployeeListPage();
     }
 }
