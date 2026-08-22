@@ -91,24 +91,21 @@ public class EmployeeDetailsPage extends BasePage {
     }
 
     @Step("Change first name to {firstName}")
-    public EmployeeDetailsPage setFirstName(String firstName) {
+    public void setFirstName(String firstName) {
         ElementsActions.clearAndEnterText(driver, firstNameField, firstName);
-        return this;
     }
 
     @Step("Change employee id to {employeeId}")
-    public EmployeeDetailsPage setEmployeeId(String employeeId) {
+    public void setEmployeeId(String employeeId) {
         ElementsActions.clearAndEnterText(driver, employeeIdField, employeeId);
-        return this;
     }
 
     @Step("Save the Personal Details form")
-    public EmployeeDetailsPage savePersonalDetails() {
+    public void savePersonalDetails() {
         ElementsActions.dismissToast(driver);
         ElementsActions.clickElement(driver, personalDetailsSave);
         captureToast();
         Waits.waitForLoaderToDisappear(driver);
-        return this;
     }
 
     @Step("Reload the employee record")

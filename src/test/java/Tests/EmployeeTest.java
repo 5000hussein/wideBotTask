@@ -211,9 +211,9 @@ public class EmployeeTest extends BaseTest {
         assertNotEquals(editedEmployee.employeeId(), originalEmployeeId,
                 "The edit must use an employee id different from the original");
 
-        details.setFirstName(editedEmployee.firstName())
-                .setEmployeeId(editedEmployee.employeeId())
-                .savePersonalDetails();
+        details.setFirstName(editedEmployee.firstName());
+        details.setEmployeeId(editedEmployee.employeeId());
+        details.savePersonalDetails();
 
         assertTrue(details.wasLastActionSuccessful(), "A success notification should confirm the update");
         assertTrue(details.getLastToastText().toLowerCase().contains("success"),

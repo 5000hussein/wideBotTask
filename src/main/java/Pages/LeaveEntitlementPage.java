@@ -31,9 +31,8 @@ public class LeaveEntitlementPage extends BasePage {
     }
 
     @Step("Select leave type {leaveType}")
-    public LeaveEntitlementPage selectLeaveType(String leaveType) {
+    public void selectLeaveType(String leaveType) {
         ElementsActions.selectFromOxdDropdown(driver, leaveTypeDropdown, leaveType);
-        return this;
     }
 
     public java.util.List<String> getAvailableLeaveTypes() {
@@ -41,13 +40,12 @@ public class LeaveEntitlementPage extends BasePage {
     }
 
     @Step("Set entitlement to {days} days")
-    public LeaveEntitlementPage setEntitlement(String days) {
+    public void setEntitlement(String days) {
         ElementsActions.clearAndEnterText(driver, entitlementField, days);
-        return this;
     }
 
     @Step("Save the entitlement")
-    public LeaveEntitlementPage save() {
+    public void save() {
         ElementsActions.clickElement(driver, saveButton);
 
         if (Waits.isElementVisible(driver, confirmButton, 5)) {
@@ -55,7 +53,5 @@ public class LeaveEntitlementPage extends BasePage {
         }
         captureToast();
         Waits.waitForLoaderToDisappear(driver);
-        return this;
     }
-
 }

@@ -43,9 +43,8 @@ public class AssignLeavePage extends BasePage {
     }
 
     @Step("Select leave type {leaveType}")
-    public AssignLeavePage selectLeaveType(String leaveType) {
+    public void selectLeaveType(String leaveType) {
         ElementsActions.selectFromOxdDropdown(driver, leaveTypeDropdown, leaveType);
-        return this;
     }
 
     public java.util.List<String> getAvailableLeaveTypes() {
@@ -53,15 +52,13 @@ public class AssignLeavePage extends BasePage {
     }
 
     @Step("Set From Date to {date}")
-    public AssignLeavePage setFromDate(LocalDate date) {
+    public void setFromDate(LocalDate date) {
         ElementsActions.setDate(driver, fromDateField, DataFactory.formatForApp(date));
-        return this;
     }
 
     @Step("Set To Date to {date}")
-    public AssignLeavePage setToDate(LocalDate date) {
+    public void setToDate(LocalDate date) {
         ElementsActions.setDate(driver, toDateField, DataFactory.formatForApp(date));
-        return this;
     }
 
     public String getFromDateValue() {
@@ -73,9 +70,8 @@ public class AssignLeavePage extends BasePage {
     }
 
     @Step("Add comment")
-    public AssignLeavePage setComment(String comment) {
+    public void setComment(String comment) {
         ElementsActions.clearAndEnterText(driver, commentsField, comment);
-        return this;
     }
 
     public String getLeaveBalance() {
@@ -85,7 +81,7 @@ public class AssignLeavePage extends BasePage {
     }
 
     @Step("Submit the leave assignment")
-    public AssignLeavePage clickAssign() {
+    public void clickAssign() {
         ElementsActions.clickElement(driver, assignButton);
 
         if (Waits.isElementVisible(driver, confirmationOkButton, 2)) {
@@ -93,13 +89,11 @@ public class AssignLeavePage extends BasePage {
         }
         captureToast();
         Waits.waitForLoaderToDisappear(driver);
-        return this;
     }
 
     @Step("Submit expecting a validation failure")
-    public AssignLeavePage assignExpectingValidationError() {
+    public void assignExpectingValidationError() {
         ElementsActions.clickElement(driver, assignButton);
-        return this;
     }
 
     public boolean isStillOnAssignPage() {

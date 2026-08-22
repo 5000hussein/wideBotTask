@@ -46,16 +46,14 @@ public class LeaveListPage extends BasePage {
     }
 
     @Step("Filter leave from {from} to {to}")
-    public LeaveListPage setDateRange(LocalDate from, LocalDate to) {
+    public void setDateRange(LocalDate from, LocalDate to) {
         ElementsActions.setDate(driver, fromDateField, DataFactory.formatForApp(from));
         ElementsActions.setDate(driver, toDateField, DataFactory.formatForApp(to));
-        return this;
     }
 
     @Step("Include leave with status {status}")
-    public LeaveListPage includeStatus(String status) {
+    public void includeStatus(String status) {
         ElementsActions.selectFromOxdDropdown(driver, statusDropdown, status);
-        return this;
     }
 
     @Step("Filter by employee {fullName}")
@@ -64,12 +62,11 @@ public class LeaveListPage extends BasePage {
     }
 
     @Step("Run the leave search")
-    public LeaveListPage clickSearch() {
+    public void clickSearch() {
         ElementsActions.dismissToast(driver);
         ElementsActions.clickElement(driver, searchButton);
         Waits.waitForLoaderToDisappear(driver);
         waitForResultsToSettle();
-        return this;
     }
 
     private void waitForResultsToSettle() {
@@ -89,10 +86,9 @@ public class LeaveListPage extends BasePage {
     }
 
     @Step("Reset the leave filters")
-    public LeaveListPage clickReset() {
+    public void clickReset() {
         ElementsActions.clickElement(driver, resetButton);
         Waits.waitForLoaderToDisappear(driver);
-        return this;
     }
 
     public List<LeaveRow> getAllRows() {

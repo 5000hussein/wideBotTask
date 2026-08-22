@@ -53,15 +53,13 @@ public class LoginPage extends BasePage {
     }
 
     @Step("Enter username: {username}")
-    public LoginPage enterUsername(String username) {
+    public void enterUsername(String username) {
         ElementsActions.clearAndEnterText(driver, usernameField, username);
-        return this;
     }
 
     @Step("Enter password")
-    public LoginPage enterPassword(String password) {
+    public void enterPassword(String password) {
         ElementsActions.clearAndEnterText(driver, passwordField, password);
-        return this;
     }
 
     @Step("Submit the login form")
@@ -85,7 +83,7 @@ public class LoginPage extends BasePage {
     }
 
     @Step("Attempt login as {username} expecting rejection")
-    public LoginPage loginExpectingFailure(String username, String password) {
+    public void loginExpectingFailure(String username, String password) {
         if (!username.isEmpty()) {
             enterUsername(username);
         }
@@ -93,7 +91,6 @@ public class LoginPage extends BasePage {
             enterPassword(password);
         }
         submit();
-        return this;
     }
 
     public boolean isStillOnLoginPage() {

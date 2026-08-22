@@ -32,36 +32,31 @@ public class AddEmployeePage extends BasePage {
     }
 
     @Step("Enter first name: {firstName}")
-    public AddEmployeePage enterFirstName(String firstName) {
+    public void enterFirstName(String firstName) {
         ElementsActions.clearAndEnterText(driver, firstNameField, firstName);
-        return this;
     }
 
     @Step("Enter middle name: {middleName}")
-    public AddEmployeePage enterMiddleName(String middleName) {
+    public void enterMiddleName(String middleName) {
         ElementsActions.clearAndEnterText(driver, middleNameField, middleName);
-        return this;
     }
 
     @Step("Enter last name: {lastName}")
-    public AddEmployeePage enterLastName(String lastName) {
+    public void enterLastName(String lastName) {
         ElementsActions.clearAndEnterText(driver, lastNameField, lastName);
-        return this;
     }
 
     @Step("Enter employee id: {employeeId}")
-    public AddEmployeePage enterEmployeeId(String employeeId) {
+    public void enterEmployeeId(String employeeId) {
         ElementsActions.clearAndEnterText(driver, employeeIdField, employeeId);
-        return this;
     }
 
     @Step("Fill the form for {employee}")
-    public AddEmployeePage fillForm(DataFactory.Employee employee) {
+    public void fillForm(DataFactory.Employee employee) {
         enterFirstName(employee.firstName());
         enterMiddleName(employee.middleName());
         enterLastName(employee.lastName());
         enterEmployeeId(employee.employeeId());
-        return this;
     }
 
     @Step("Save {employee} and open the created record")
@@ -83,9 +78,8 @@ public class AddEmployeePage extends BasePage {
     }
 
     @Step("Save expecting a validation failure")
-    public AddEmployeePage saveExpectingValidationError() {
+    public void saveExpectingValidationError() {
         ElementsActions.clickElement(driver, saveButton);
-        return this;
     }
 
     public boolean isStillOnAddEmployeePage() {

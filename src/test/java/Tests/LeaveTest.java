@@ -102,9 +102,9 @@ public class LeaveTest extends BaseTest {
         leaveType = availableTypes.get(0);
         System.out.println("Using leave type: " + leaveType);
 
-        entitlement.selectLeaveType(leaveType)
-                .setEntitlement(DataFactory.entitlementDays())
-                .save();
+        entitlement.selectLeaveType(leaveType);
+        entitlement.setEntitlement(DataFactory.entitlementDays());
+        entitlement.save();
 
         assertTrue(entitlement.wasLastActionSuccessful(),
                 "Granting the entitlement should be confirmed; toast was: '"
@@ -130,9 +130,9 @@ public class LeaveTest extends BaseTest {
         String balance = assign.getLeaveBalance();
         System.out.println("Reported leave balance before submitting: " + balance);
 
-        assign.setFromDate(fromDate)
-                .setToDate(toDate)
-                .setComment("Submitted by automated regression run " + DataFactory.runTag());
+        assign.setFromDate(fromDate);
+        assign.setToDate(toDate);
+        assign.setComment("Submitted by automated regression run " + DataFactory.runTag());
 
         assertEquals(assign.getFromDateValue(), DataFactory.formatForApp(fromDate),
                 "From Date should hold the calculated start date");

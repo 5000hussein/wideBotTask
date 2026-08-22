@@ -38,9 +38,9 @@ public class NegativeTest extends BaseTest {
         AddEmployeePage addEmployee = new AddEmployeePage().open();
 
         String firstName = DataFactory.negativeFirstName();
-        addEmployee.enterFirstName(firstName)
-                .enterLastName("")
-                .saveExpectingValidationError();
+        addEmployee.enterFirstName(firstName);
+        addEmployee.enterLastName("");
+        addEmployee.saveExpectingValidationError();
 
         assertEquals(addEmployee.getFieldErrorFor("Employee Full Name"), "Required",
                 "A 'Required' message should be shown against the name field");
@@ -68,9 +68,9 @@ public class NegativeTest extends BaseTest {
         AddEmployeePage addEmployee = new AddEmployeePage().open();
 
         String overlongName = DataFactory.overlongFirstName();
-        addEmployee.enterFirstName(overlongName)
-                .enterLastName(DataFactory.negativeLastName())
-                .saveExpectingValidationError();
+        addEmployee.enterFirstName(overlongName);
+        addEmployee.enterLastName(DataFactory.negativeLastName());
+        addEmployee.saveExpectingValidationError();
 
         String error = addEmployee.getFieldErrorFor("Employee Full Name");
         assertFalse(error.isBlank(),
@@ -104,8 +104,8 @@ public class NegativeTest extends BaseTest {
                     + "negative scenarios in this class are unaffected.");
         }
 
-        assign.setFromDate(DataFactory.leaveStartDate())
-                .setToDate(DataFactory.invalidEndDate());
+        assign.setFromDate(DataFactory.leaveStartDate());
+        assign.setToDate(DataFactory.invalidEndDate());
 
         String error = assign.getFieldErrorFor("To Date");
         if (error.isBlank()) {
@@ -131,8 +131,8 @@ public class NegativeTest extends BaseTest {
     public void verifyInvalidCredentialsAreRejected() {
         new Pages.DashboardPage().logout();
 
-        LoginPage login = new LoginPage().open()
-                .loginExpectingFailure(Config.getInstance().getUsername(), DataFactory.invalidPassword());
+        LoginPage login = new LoginPage().open();
+        login.loginExpectingFailure(Config.getInstance().getUsername(), DataFactory.invalidPassword());
 
         assertEquals(login.getAlertMessage(), "Invalid credentials",
                 "A clear rejection message should be displayed");

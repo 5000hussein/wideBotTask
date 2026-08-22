@@ -57,21 +57,18 @@ public class PimEmployeeListPage extends BasePage {
     }
 
     @Step("Filter by employment status: {status}")
-    public PimEmployeeListPage setEmploymentStatusFilter(String status) {
+    public void setEmploymentStatusFilter(String status) {
         ElementsActions.selectFromOxdDropdown(driver, employmentStatusDropdown, status);
-        return this;
     }
 
     @Step("Filter by job title: {jobTitle}")
-    public PimEmployeeListPage setJobTitleFilter(String jobTitle) {
+    public void setJobTitleFilter(String jobTitle) {
         ElementsActions.selectFromOxdDropdown(driver, jobTitleDropdown, jobTitle);
-        return this;
     }
 
     @Step("Filter by sub unit: {subUnit}")
-    public PimEmployeeListPage setSubUnitFilter(String subUnit) {
+    public void setSubUnitFilter(String subUnit) {
         ElementsActions.selectFromOxdDropdown(driver, subUnitDropdown, subUnit);
-        return this;
     }
 
     public String getSelectedEmploymentStatus() {
@@ -91,20 +88,18 @@ public class PimEmployeeListPage extends BasePage {
     }
 
     @Step("Run the search")
-    public PimEmployeeListPage clickSearch() {
+    public void clickSearch() {
         ElementsActions.dismissToast(driver);
         ElementsActions.clickElement(driver, searchButton);
         Waits.waitForLoaderToDisappear(driver);
         waitForResultsToSettle();
-        return this;
     }
 
     @Step("Reset the filters")
-    public PimEmployeeListPage clickReset() {
+    public void clickReset() {
         ElementsActions.clickElement(driver, resetButton);
         Waits.waitForLoaderToDisappear(driver);
         waitForResultsToSettle();
-        return this;
     }
 
     private void waitForResultsToSettle() {
@@ -188,7 +183,7 @@ public class PimEmployeeListPage extends BasePage {
     }
 
     @Step("Delete the employee with last name {lastName}")
-    public PimEmployeeListPage deleteEmployeeByLastName(String lastName) {
+    public void deleteEmployeeByLastName(String lastName) {
         WebElement row = rowElementByLastName(lastName);
 
         WebElement deleteButton = row.findElements(By.cssSelector("button.oxd-icon-button")).stream()
@@ -201,7 +196,6 @@ public class PimEmployeeListPage extends BasePage {
         By confirmDelete = By.xpath("//button[contains(normalize-space(),'Yes, Delete')]");
         ElementsActions.clickElement(driver, confirmDelete);
         Waits.waitForLoaderToDisappear(driver);
-        return this;
     }
 
     private static String text(List<WebElement> cells, int index) {
