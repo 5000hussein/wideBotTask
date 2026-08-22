@@ -5,12 +5,18 @@ and leave lifecycle, plus the manual testing deliverables.
 
 **Application under test:** https://opensource-demo.orangehrmlive.com (OrangeHRM OS 5.9)
 
+> ### 🧭 New to this repo? Read [**`docs/walkthrough.md`**](docs/walkthrough.md) first.
+> One page covering the whole framework: the four layers, the six files that matter, a map of
+> every file, one test traced end to end, and the design decisions with the reasoning behind
+> each. It's the fastest way to understand what's here and why.
+
 ## 📁 Deliverables — start here
 
 | # | Deliverable | Where |
 |---|---|---|
 | 1 | **Automation framework** | [`src/`](src/) · [`pom.xml`](pom.xml) · [`testng.xml`](testng.xml) · [`suites/`](suites/) |
 | 2 | **README** (this file) | [How to execute tests](#how-to-execute-tests) · [Configuration](#configuration) · [Test-data strategy](#test-data-strategy-and-cleanup) |
+| — | **Framework walkthrough** — architecture, file map, design decisions | **[`docs/walkthrough.md`](docs/walkthrough.md)** |
 | 3 | **Automated tests** — 19 tests, Steps 1–9 | [`src/test/java/Tests/`](src/test/java/Tests/) · [coverage matrix](#scenario-coverage) |
 | 4 | **Screenshots** — 18 checkpoints | [`screenshots/`](screenshots/) |
 | 5 | **Test report** | **[Live Allure report ↗](https://5000hussein.github.io/wideBotTask/report/)** · source in [`docs/report/`](docs/report/) |
