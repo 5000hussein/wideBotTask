@@ -7,9 +7,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 
-/** Focused probe: forms, tables and toasts, without the per-row button noise. */
 public class FormProbe {
-
     private static WebDriver driver;
 
     public static void main(String[] args) {

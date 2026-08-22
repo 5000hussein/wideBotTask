@@ -27,26 +27,9 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
-/**
- * Step 8 -- Leave request.
- *
- * Route note. Leave → Apply cannot be used on this environment: the signed-in
- * Admin holds no leave entitlement, so that screen renders "No Leave Types with
- * Leave Balance" instead of a form -- {@link #applyLeaveScreenMatchesEntitlementState()}
- * asserts the screen is correct for whichever state it is in, rather than
- * leaving it as an unexplained gap. The suite therefore creates the request
- * through Leave → Assign Leave, the administrator's equivalent flow, against a
- * dedicated employee it creates and entitles itself. That keeps the scenario
- * self-contained instead of depending on whatever entitlements the shared demo
- * data happens to hold.
- *
- * Dates are calculated at runtime (next Monday to next Wednesday), never
- * hard-coded, and are anchored to a Monday so the working-day count is stable.
- */
 @Epic("OrangeHRM")
 @Feature("Leave")
 public class LeaveTest extends BaseTest {
-
     private DataFactory.Employee leaveEmployee;
     private String leaveType;
     private LocalDate fromDate;
@@ -59,12 +42,6 @@ public class LeaveTest extends BaseTest {
         fromDate = DataFactory.leaveStartDate();
         toDate = DataFactory.leaveEndDate();
 
-        // Fail fast, and accurately, when the account cannot reach the module at
-        // all. The permissions attached to the shared demo's Admin role are
-        // changed by other users of the sandbox; when the Leave module is revoked
-        // every screen below returns 403, and without this check each test spends
-        // its full timeout and then reports a missing control -- which looks like
-        // a broken locator or a product defect instead of an access problem.
         new ApplyLeavePage().open();
         if (new ApplyLeavePage().isModuleForbidden()) {
             throw new SkipException(
@@ -87,11 +64,6 @@ public class LeaveTest extends BaseTest {
         ApplyLeavePage apply = new ApplyLeavePage().open();
         ApplyLeavePage.State state = apply.getState();
 
-        // Asserted rather than skipped. The entitlement held by the shared demo
-        // account is outside this suite's control, so the test verifies that the
-        // screen is CORRECT for whichever state it is in. That keeps the result
-        // meaningful either way, instead of reporting a skip the reader then has
-        // to go and investigate.
         assertNotEquals(state, ApplyLeavePage.State.UNKNOWN,
                 "Apply Leave should render either the request form or the no-balance message");
 
@@ -110,10 +82,6 @@ public class LeaveTest extends BaseTest {
         checkpoint("12-apply-leave-state");
     }
 
-    // In "smoke" as well as "regression" on purpose: submitLeaveRequest is a smoke
-    // test and depends on this one, and TestNG refuses to run a group whose
-    // members depend on methods the filter excluded. A group has to be closed
-    // over its dependencies.
     @Test(priority = 2, groups = {"smoke", "regression"},
             description = "An employee is created and entitled so leave can be assigned to them")
     @Story("Leave prerequisites")
@@ -126,8 +94,6 @@ public class LeaveTest extends BaseTest {
 
         LeaveEntitlementPage entitlement = new LeaveEntitlementPage().open();
 
-        // The employee has to be chosen FIRST: entitlements are per-employee, and
-        // the Leave Type list is only populated once the form knows who it is for.
         assertTrue(entitlement.selectEmployee(leaveEmployee.fullName()),
                 "The newly created employee should be selectable for an entitlement");
 
@@ -168,7 +134,6 @@ public class LeaveTest extends BaseTest {
                 .setToDate(toDate)
                 .setComment("Submitted by automated regression run " + DataFactory.runTag());
 
-        // The dates must have landed in the app's yyyy-dd-MM format.
         assertEquals(assign.getFromDateValue(), DataFactory.formatForApp(fromDate),
                 "From Date should hold the calculated start date");
         assertEquals(assign.getToDateValue(), DataFactory.formatForApp(toDate),
@@ -192,7 +157,6 @@ public class LeaveTest extends BaseTest {
     public void submittedLeaveCanBeFound() {
         LeaveListPage leaveList = new LeaveListPage().open();
 
-        // The status filter defaults to a subset that hides admin-assigned leave.
         leaveList.includeStatus("Scheduled");
         leaveList.setDateRange(fromDate, toDate);
         assertTrue(leaveList.setEmployeeFilter(leaveEmployee.fullName()),

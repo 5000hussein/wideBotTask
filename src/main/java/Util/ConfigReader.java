@@ -3,20 +3,7 @@ package Util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-
-/**
- * Single source of truth for every environment / runtime value.
- *
- * Resolution order (first hit wins):
- *   1. JVM system property   -> -Dusername=Admin
- *   2. OS environment var    -> ORANGEHRM_USERNAME (prefixed, see toEnvKey)
- *   3. config.properties     -> src/main/resources/config.properties
- *
- * This is what keeps credentials out of the test classes: a test asks for
- * ConfigReader.username(), never for the literal string.
- */
 public final class ConfigReader {
-
     private static final Properties PROPERTIES = new Properties();
     private static final String CONFIG_FILE = "config.properties";
     private static final String ENV_PREFIX = "ORANGEHRM_";
@@ -64,16 +51,6 @@ public final class ConfigReader {
         }
     }
 
-    public static int getInt(String key) {
-        return Integer.parseInt(get(key));
-    }
-
-    public static boolean getBoolean(String key) {
-        return Boolean.parseBoolean(get(key));
-    }
-
-    // -- Typed accessors: the vocabulary the rest of the framework speaks ----
-
     public static String baseUrl() {
         return get("base.url");
     }
@@ -110,15 +87,6 @@ public final class ConfigReader {
         return value != null && !value.isBlank();
     }
 
-    /**
-     * base.url -> ORANGEHRM_BASE_URL, username -> ORANGEHRM_USERNAME.
-     *
-     * The ORANGEHRM_ prefix is deliberate. An unprefixed lookup collides with
-     * variables the OS already defines: on Windows %USERNAME% is the logged-in
-     * account, so a bare "USERNAME" lookup silently resolved to the developer's
-     * own login and every test failed with "Invalid credentials". Namespacing
-     * the variables makes the config surface explicit and collision-free.
-     */
     private static String toEnvKey(String key) {
         return ENV_PREFIX + key.toUpperCase().replace('.', '_');
     }

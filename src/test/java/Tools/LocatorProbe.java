@@ -8,18 +8,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 
-/**
- * Developer tool, not a test.
- *
- * Walks the application and dumps the real DOM shape of each screen so that the
- * page objects can be written against verified selectors instead of guesses.
- * Run it whenever OrangeHRM changes its markup:
- *
- *   mvn -q test-compile
- *   mvn -q exec:java -Dexec.classpathScope=test -Dexec.mainClass=Tools.LocatorProbe
- */
 public class LocatorProbe {
-
     private static WebDriver driver;
 
     public static void main(String[] args) {
@@ -47,7 +36,6 @@ public class LocatorProbe {
         System.out.println("URL: " + driver.getCurrentUrl());
     }
 
-    /** Dumps tag/type/name/placeholder/class for everything interactive on screen. */
     private static void dumpInteractive() {
         String script = """
                 const out = [];
@@ -68,7 +56,6 @@ public class LocatorProbe {
         System.out.println(((JavascriptExecutor) driver).executeScript(script));
     }
 
-    /** Dumps every form label together with the input that follows it. */
     private static void dumpLabels() {
         String script = """
                 const out = [];
@@ -116,8 +103,6 @@ public class LocatorProbe {
             Thread.currentThread().interrupt();
         }
     }
-
-    // ------------------------------------------------------------- screens
 
     private static void probeLogin() {
         go("/web/index.php/auth/login");
@@ -175,7 +160,6 @@ public class LocatorProbe {
     }
 
     private static void probePersonalDetails() {
-        // empNumber 7 exists on the public demo; if not, the probe just reports it.
         go("/web/index.php/pim/viewPersonalDetails/empNumber/7");
         section("PIM > PERSONAL DETAILS (empNumber 7)");
         dumpLabels();

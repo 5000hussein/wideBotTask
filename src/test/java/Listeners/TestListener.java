@@ -8,18 +8,7 @@ import org.testng.ITestResult;
 
 import java.time.Duration;
 
-/**
- * Cross-cutting reporting concerns:
- *   - a screenshot is captured automatically the moment a test fails;
- *   - the failing page URL/title is attached for triage;
- *   - each test's wall-clock duration is recorded into the Allure result.
- *
- * Registered in the suite XMLs and, for the class-scanning execution modes, by
- * the @Listeners annotation on BaseTest -- so failure evidence is produced no
- * matter how the suite is launched.
- */
 public class TestListener implements ITestListener {
-
     @Override
     public void onTestStart(ITestResult result) {
         Allure.getLifecycle().updateTestCase(testResult ->

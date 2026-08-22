@@ -7,7 +7,6 @@ import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 
 public class LoginPage extends BasePage {
-
     private static final String PATH = "/web/index.php/auth/login";
 
     private final By usernameField = By.name("username");
@@ -23,8 +22,6 @@ public class LoginPage extends BasePage {
         Waits.waitForElementVisible(driver, usernameField);
         return this;
     }
-
-    // ------------------------------------------------------ state queries
 
     public boolean isLoginPageDisplayed() {
         return ElementsActions.isDisplayed(driver, loginTitle)
@@ -47,14 +44,11 @@ public class LoginPage extends BasePage {
         return Waits.waitForElementVisible(driver, loginButton).isEnabled();
     }
 
-    /** Banner shown for a rejected sign-in, e.g. "Invalid credentials". */
     public String getAlertMessage() {
         return Waits.isElementVisible(driver, alertText, 10)
                 ? ElementsActions.getText(driver, alertText)
                 : "";
     }
-
-    // ----------------------------------------------------------- actions
 
     @Step("Enter username: {username}")
     public LoginPage enterUsername(String username) {
@@ -73,10 +67,6 @@ public class LoginPage extends BasePage {
         ElementsActions.clickElement(driver, loginButton);
     }
 
-    /**
-     * Signs in with the configured credentials and waits for the dashboard.
-     * Credentials come from ConfigReader, never from a literal in a test.
-     */
     @Step("Log in with the configured credentials")
     public DashboardPage loginWithValidCredentials() {
         return loginAs(ConfigReader.username(), ConfigReader.password());
@@ -92,7 +82,6 @@ public class LoginPage extends BasePage {
         return new DashboardPage();
     }
 
-    /** Submits credentials that are expected to fail; stays on the login page. */
     @Step("Attempt login as {username} expecting rejection")
     public LoginPage loginExpectingFailure(String username, String password) {
         if (!username.isEmpty()) {

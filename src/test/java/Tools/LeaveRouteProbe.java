@@ -6,7 +6,6 @@ import Util.Waits;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
-/** Are the Leave routes rendering at all right now, and how long do they take? */
 public class LeaveRouteProbe {
     public static void main(String[] args) throws Exception {
         WebDriver driver = Drivers.setUpDriver();

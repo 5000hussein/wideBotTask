@@ -10,16 +10,7 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 
 import java.time.Duration;
 
-/**
- * WebDriver lifecycle owner.
- *
- * The driver lives in a ThreadLocal so a TestNG suite can run with
- * parallel="classes" without the tests fighting over one browser.
- * Binaries are resolved by Selenium Manager (Selenium 4.6+), so there is no
- * WebDriverManager dependency and nothing to install by hand.
- */
 public final class Drivers {
-
     private static final ThreadLocal<WebDriver> DRIVER = new ThreadLocal<>();
 
     private Drivers() {
@@ -33,8 +24,7 @@ public final class Drivers {
         };
 
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(ConfigReader.pageLoadTimeout()));
-        // No implicit wait on purpose: mixing implicit and explicit waits makes
-        // timeouts unpredictable. Every wait in this framework is explicit.
+
         if (!headless) {
             driver.manage().window().maximize();
         }

@@ -16,16 +16,9 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
-/**
- * Step 1 -- Login.
- *
- * Covers the unauthenticated screen, a successful sign-in, and the identity of
- * the account that was signed in.
- */
 @Epic("OrangeHRM")
 @Feature("Authentication")
 public class LoginTest extends BaseTest {
-
     @Test(priority = 1, groups = {"smoke", "regression"},
             retryAnalyzer = Listeners.RetryAnalyzer.class,
             description = "Login page renders with username, password and Login button")
@@ -60,7 +53,6 @@ public class LoginTest extends BaseTest {
         assertTrue(dashboard.getWidgetCount() > 0,
                 "Dashboard should render at least one widget");
 
-        // "Logged-in user information is displayed"
         assertTrue(dashboard.isLoggedInUserDisplayed(),
                 "The signed-in user's menu should be displayed");
         String displayedUser = dashboard.getLoggedInUserName();

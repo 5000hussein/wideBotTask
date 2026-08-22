@@ -20,25 +20,13 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-/**
- * Step 9 -- negative validation.
- *
- * Four scenarios, covering the three candidates the assessment offers plus
- * authentication. Each one asserts BOTH halves of the requirement: that the
- * validation message appears, AND that the record was genuinely not created or
- * changed -- verified by going back and looking, not by trusting the UI.
- */
 @Epic("OrangeHRM")
 @Feature("Negative validation")
 public class NegativeTest extends BaseTest {
-
-
     @BeforeClass(alwaysRun = true, dependsOnMethods = "setUp")
     public void signIn() {
         loginToDashboard();
     }
-
-    // -------------------------------------- A: required field left empty
 
     @Test(priority = 1, groups = {"negative", "regression"},
             description = "Creating an employee without a last name is rejected")
@@ -54,11 +42,9 @@ public class NegativeTest extends BaseTest {
                 .enterLastName("")
                 .saveExpectingValidationError();
 
-        // "Validation message is displayed"
         assertEquals(addEmployee.getFieldErrorFor("Employee Full Name"), "Required",
                 "A 'Required' message should be shown against the name field");
 
-        // "Employee is not created"
         assertTrue(addEmployee.isStillOnAddEmployeePage(),
                 "The form should not navigate away when validation fails");
         assertFalse(addEmployee.isSuccessToastDisplayed(),
@@ -66,16 +52,11 @@ public class NegativeTest extends BaseTest {
 
         checkpoint("15-negative-required-field");
 
-        // Prove absence at the source rather than trusting the screen: the name
-        // autocomplete queries the employee table, so offering no match for this
-        // name is evidence that no such record exists.
         PimEmployeeListPage list = new PimEmployeeListPage().open();
         assertFalse(list.setEmployeeNameFilter(firstName),
                 "No employee should have been created by the rejected submission, "
                         + "but the search offered a match for '" + firstName + "'");
     }
-
-    // ---------------------------------------- B: invalid employee data
 
     @Test(priority = 2, groups = {"negative", "regression"},
             description = "An over-length name is rejected by the employee form")
@@ -107,8 +88,6 @@ public class NegativeTest extends BaseTest {
         checkpoint("16-negative-invalid-data");
     }
 
-    // ------------------------------------------ C: invalid leave request
-
     @Test(priority = 3, groups = {"negative", "regression"},
             retryAnalyzer = Listeners.RetryAnalyzer.class,
             description = "A leave request whose end date precedes its start date is rejected")
@@ -130,7 +109,6 @@ public class NegativeTest extends BaseTest {
 
         String error = assign.getFieldErrorFor("To Date");
         if (error.isBlank()) {
-            // Some builds only surface the error on submit.
             assign.assignExpectingValidationError();
             error = assign.getFieldErrorFor("To Date");
         }
@@ -143,8 +121,6 @@ public class NegativeTest extends BaseTest {
 
         checkpoint("17-negative-invalid-leave-dates");
     }
-
-    // -------------------------------------------- D: authentication
 
     @Test(priority = 4, groups = {"negative", "regression"},
             description = "Invalid credentials are rejected with a clear message")
@@ -164,7 +140,6 @@ public class NegativeTest extends BaseTest {
 
         checkpoint("18-negative-invalid-credentials");
 
-        // Restore the session so @AfterClass cleanup can still run.
         login.loginWithValidCredentials();
     }
 }

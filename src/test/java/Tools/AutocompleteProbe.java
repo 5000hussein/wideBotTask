@@ -8,9 +8,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-/** What does the Employee Name autocomplete actually render while typing? */
 public class AutocompleteProbe {
-
     private static WebDriver driver;
 
     public static void main(String[] args) throws Exception {
@@ -23,7 +21,6 @@ public class AutocompleteProbe {
             Waits.waitForElementVisible(driver, By.cssSelector(".oxd-table-card"), 30);
             Thread.sleep(2000);
 
-            // Grab a real last name from the table to type.
             WebElement firstCard = driver.findElements(By.cssSelector(".oxd-table-card")).get(0);
             var cells = firstCard.findElements(By.cssSelector(".oxd-table-cell"));
             String first = cells.get(2).getText().trim();

@@ -13,23 +13,13 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Screenshot capture for both purposes the assessment asks for:
- * named checkpoints on the happy path, and automatic evidence on failure.
- *
- * Every capture is written twice -- to screenshots/ on disk (so the files can
- * be committed and reviewed without opening a report) and into the Allure
- * result as an embedded attachment.
- */
 public final class ScreenshotUtil {
-
     private static final Path SCREENSHOT_DIR = Paths.get("screenshots");
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
 
     private ScreenshotUtil() {
     }
 
-    /** Named checkpoint, e.g. "01-login-dashboard". */
     public static Path capture(String name) {
         if (!Drivers.hasDriver()) {
             return null;
@@ -49,18 +39,15 @@ public final class ScreenshotUtil {
             Files.write(target, png);
             return target;
         } catch (IOException | RuntimeException e) {
-            // A screenshot failure must never be the reason a test result changes.
             System.err.println("Could not capture screenshot '" + name + "': " + e.getMessage());
             return null;
         }
     }
 
-    /** Failure evidence -- timestamped so repeated failures do not overwrite. */
     public static Path captureFailure(String testName) {
         return capture("FAILED-" + testName + "-" + LocalDateTime.now().format(STAMP));
     }
 
-    /** Attaches the current URL and page title, which is usually the fastest triage clue. */
     public static void attachPageContext() {
         if (!Drivers.hasDriver()) {
             return;

@@ -8,17 +8,7 @@ import org.openqa.selenium.By;
 
 import java.time.LocalDate;
 
-/**
- * Leave → Assign Leave.
- *
- * This is the leave-creation path the suite uses, and the choice is deliberate.
- * Leave → Apply is unusable for the Admin account on the demo environment --
- * it renders "No Leave Types with Leave Balance" because the account holds no
- * entitlement (see ApplyLeavePage, which asserts exactly that). Assign Leave is
- * the equivalent flow available to an administrator.
- */
 public class AssignLeavePage extends BasePage {
-
     private static final String PATH = "/web/index.php/leave/assignLeave";
 
     private final By employeeNameInput = By.xpath(
@@ -33,7 +23,6 @@ public class AssignLeavePage extends BasePage {
             "//div[contains(@class,'oxd-input-group')][.//label[contains(normalize-space(),'Leave Balance')]]"
                     + "//p[contains(@class,'orangehrm-leave-balance')]");
 
-    /** Shown when the requested days exceed the balance. */
     private final By confirmationOkButton = By.xpath(
             "//div[contains(@class,'oxd-dialog-container')]//button[normalize-space()='Ok']");
 
@@ -64,7 +53,6 @@ public class AssignLeavePage extends BasePage {
         return ElementsActions.getOxdDropdownRealOptions(driver, leaveTypeDropdown);
     }
 
-    /** Dates are written in the application's yyyy-dd-MM format, see DataFactory. */
     @Step("Set From Date to {date}")
     public AssignLeavePage setFromDate(LocalDate date) {
         ElementsActions.setDate(driver, fromDateField, DataFactory.formatForApp(date));
@@ -91,7 +79,6 @@ public class AssignLeavePage extends BasePage {
         return this;
     }
 
-    /** The balance the application reports for the chosen employee + leave type. */
     public String getLeaveBalance() {
         return Waits.isElementVisible(driver, leaveBalanceValue, 8)
                 ? ElementsActions.getText(driver, leaveBalanceValue)
@@ -102,11 +89,6 @@ public class AssignLeavePage extends BasePage {
     public AssignLeavePage clickAssign() {
         ElementsActions.clickElement(driver, assignButton);
 
-        // Insufficient balance raises a confirm dialog rather than an error.
-        // The probe is deliberately SHORT: the success toast lives only a few
-        // seconds, so spending five of them waiting for a dialog that usually
-        // never appears means the toast has already faded by the time it is read,
-        // and a submission that worked is reported as unconfirmed.
         if (Waits.isElementVisible(driver, confirmationOkButton, 2)) {
             ElementsActions.clickElement(driver, confirmationOkButton);
         }
@@ -115,15 +97,10 @@ public class AssignLeavePage extends BasePage {
         return this;
     }
 
-    /** Submits expecting rejection -- no dialog is dismissed, no wait for success. */
     @Step("Submit expecting a validation failure")
     public AssignLeavePage assignExpectingValidationError() {
         ElementsActions.clickElement(driver, assignButton);
         return this;
-    }
-
-    public boolean isConfirmationDialogDisplayed() {
-        return Waits.isElementVisible(driver, confirmationOkButton, 5);
     }
 
     public boolean isStillOnAssignPage() {

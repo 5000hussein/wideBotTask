@@ -7,9 +7,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 
-/** Does this environment define any leave types, and where are they configured? */
 public class LeaveTypeProbe {
-
     private static WebDriver driver;
 
     public static void main(String[] args) throws Exception {

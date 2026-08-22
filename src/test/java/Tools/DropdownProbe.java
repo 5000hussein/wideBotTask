@@ -7,7 +7,6 @@ import Util.Waits;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
-/** What does each Employee List filter dropdown actually offer? */
 public class DropdownProbe {
     public static void main(String[] args) {
         WebDriver driver = Drivers.setUpDriver();

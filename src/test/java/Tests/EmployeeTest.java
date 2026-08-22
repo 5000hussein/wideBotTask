@@ -23,22 +23,13 @@ import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-/**
- * Steps 2 to 7 -- the employee lifecycle.
- *
- * One journey, expressed as a dependency chain: search, create, find, open,
- * edit, prove persistence, filter. Every row is located by content; no
- * assertion anywhere in this class refers to a row position.
- */
 @Epic("OrangeHRM")
 @Feature("PIM - Employee Management")
 public class EmployeeTest extends BaseTest {
-
     private DataFactory.Employee employee;
     private DataFactory.Employee editedEmployee;
     private String empNumber;
 
-    /** Employees other users of the shared demo may add or remove during a run. */
     private static final int RESET_COUNT_TOLERANCE = 25;
 
     @BeforeClass(alwaysRun = true, dependsOnMethods = "setUp")
@@ -46,8 +37,6 @@ public class EmployeeTest extends BaseTest {
         loginToDashboard();
         employee = DataFactory.newEmployee();
     }
-
-    // ------------------------------------------------------- Step 2: search
 
     @Test(priority = 1, groups = {"smoke", "regression"},
             description = "Searching by name returns only employees matching that name")
@@ -62,15 +51,6 @@ public class EmployeeTest extends BaseTest {
         int totalBefore = list.getRecordCount();
         assertTrue(totalBefore > 0, "The environment should contain employees to search for");
 
-        // Discover a seed employee from the unfiltered list rather than hard-coding
-        // a name that the shared demo data may not contain. Discovery uses a row;
-        // every ASSERTION below is content-based.
-        //
-        // Several candidates are tried in turn: this is a shared sandbox whose
-        // records are edited by anyone, and an individual row can be un-searchable
-        // (renamed, deleted, or holding a name the hint service will not match).
-        // Failing the whole search scenario over one unlucky row would report a
-        // data problem as a product defect.
         PimEmployeeListPage.EmployeeRow seed = null;
         for (PimEmployeeListPage.EmployeeRow candidate : pickSearchableEmployees(list.getAllRows())) {
             if (list.setEmployeeNameFilter(candidate.fullName())) {
@@ -91,7 +71,6 @@ public class EmployeeTest extends BaseTest {
         assertTrue(list.getRecordCount() < totalBefore,
                 "A name filter should narrow the result set below the unfiltered total");
 
-        // "Returned employee matches the searched criteria"
         for (PimEmployeeListPage.EmployeeRow row : results) {
             assertEquals(row.lastName(), seed.lastName(),
                     "Every returned row should carry the searched last name");
@@ -99,7 +78,6 @@ public class EmployeeTest extends BaseTest {
         Optional<PimEmployeeListPage.EmployeeRow> found = list.findRowByLastName(seed.lastName());
         assertTrue(found.isPresent(), "The searched employee should be present in the results");
 
-        // "Employee information is displayed correctly"
         assertEquals(found.get().firstAndMiddleName(), seed.firstAndMiddleName(),
                 "First (& middle) name should match the record that was searched for");
         assertEquals(found.get().id(), seed.id(), "Employee Id should match");
@@ -107,11 +85,6 @@ public class EmployeeTest extends BaseTest {
         checkpoint("03-employee-search-results");
     }
 
-    /**
-     * Candidate employees the name autocomplete has a chance of matching.
-     * The shared demo database contains rows whose "names" are digits or
-     * punctuation left behind by other users; those are not valid seeds.
-     */
     private List<PimEmployeeListPage.EmployeeRow> pickSearchableEmployees(
             List<PimEmployeeListPage.EmployeeRow> rows) {
         List<PimEmployeeListPage.EmployeeRow> candidates = rows.stream()
@@ -126,8 +99,6 @@ public class EmployeeTest extends BaseTest {
         return candidates;
     }
 
-    // ------------------------------------------------------- Step 3: create
-
     @Test(priority = 2, groups = {"smoke", "regression"},
             description = "A new employee is created from generated data")
     @Story("Employee creation")
@@ -138,22 +109,18 @@ public class EmployeeTest extends BaseTest {
         AddEmployeePage addEmployee = new AddEmployeePage().open();
         assertTrue(addEmployee.isDisplayed(), "Add Employee form should be displayed");
 
-        // OrangeHRM pre-fills a suggested id; capture it to prove the field is live.
         String prefilledId = addEmployee.getPrefilledEmployeeId();
         assertFalse(prefilledId.isBlank(), "OrangeHRM should pre-populate a suggested Employee Id");
 
         EmployeeDetailsPage details = addEmployee.saveAndOpenRecord(employee);
         registerForCleanup(employee);
 
-        // "Success notification/message is displayed" -- read at save time, since
-        // the toast auto-dismisses well before the record page finishes loading.
         assertTrue(details.wasCreationConfirmed(),
                 "A success notification should be displayed on save");
         assertTrue(details.getCreationToastText().toLowerCase().contains("success"),
                 "Notification should confirm success but was: '"
                         + details.getCreationToastText() + "'");
 
-        // "Employee ID is generated/displayed" -- the server-assigned record number.
         empNumber = details.getEmpNumberFromUrl();
         assertFalse(empNumber.isBlank(),
                 "The created record should have a server-assigned employee number in its URL");
@@ -163,8 +130,6 @@ public class EmployeeTest extends BaseTest {
         checkpoint("04-employee-created");
         details.dismissToast();
     }
-
-    // ------------------------------------- Step 4: validate the created employee
 
     @Test(priority = 3, groups = {"regression"}, dependsOnMethods = "createNewEmployee",
             description = "The created employee can be found again in the employee list")
@@ -208,26 +173,21 @@ public class EmployeeTest extends BaseTest {
         assertEquals(details.getEmpNumberFromUrl(), empNumber,
                 "Opening from the list should reach the same record that creation returned");
 
-        // "Employee name matches the data used during creation"
         assertEquals(details.getFirstName(), employee.firstName(), "First name should match");
         assertEquals(details.getMiddleName(), employee.middleName(), "Middle name should match");
         assertEquals(details.getLastName(), employee.lastName(), "Last name should match");
 
-        // "Employee ID is populated"
         assertEquals(details.getEmployeeId(), employee.employeeId(), "Employee Id should be populated");
 
         String banner = details.getDisplayedName();
         assertTrue(banner.contains(employee.firstName()) && banner.contains(employee.lastName()),
                 "The record header should show the employee's name but was: '" + banner + "'");
 
-        // "Employee details are accessible"
         assertTrue(details.isTabAvailable("Job"), "The Job tab should be accessible");
         assertTrue(details.isTabAvailable("Contact Details"), "The Contact Details tab should be accessible");
 
         checkpoint("06-created-employee-record");
     }
-
-    // --------------------------------------------------------- Step 5: edit
 
     @Test(priority = 5, groups = {"regression"}, dependsOnMethods = "openCreatedEmployeeRecordAndValidateDetails",
             description = "Employee fields can be edited and the update is confirmed")
@@ -260,7 +220,6 @@ public class EmployeeTest extends BaseTest {
 
         details.dismissToast();
 
-        // "Updated value is visible after saving"
         assertEquals(details.getFirstName(), editedEmployee.firstName(),
                 "The updated first name should be visible after saving");
         assertEquals(details.getEmployeeId(), editedEmployee.employeeId(),
@@ -268,8 +227,6 @@ public class EmployeeTest extends BaseTest {
 
         checkpoint("07-employee-updated");
     }
-
-    // ------------------------------------- Step 6: persistence after refresh
 
     @Test(priority = 6, groups = {"regression"}, dependsOnMethods = "editEmployeeInformation",
             description = "The updated values survive a page refresh")
@@ -303,7 +260,6 @@ public class EmployeeTest extends BaseTest {
         assertEquals(details.getEmployeeId(), editedEmployee.employeeId(),
                 "The updated employee id should still be present after navigating away and back");
 
-        // Cross-check through the list, which is a separate server-side query.
         PimEmployeeListPage list = new PimEmployeeListPage().open();
         list.setEmployeeNameFilter(editedEmployee.fullName());
         list.clickSearch();
@@ -318,8 +274,6 @@ public class EmployeeTest extends BaseTest {
         checkpoint("09-update-persisted-after-navigation");
     }
 
-    // ------------------------------------------------------ Step 7: filtering
-
     @Test(priority = 8, groups = {"regression"},
             description = "Two filter criteria applied together return only matching data")
     @Story("Employee list filtering")
@@ -329,27 +283,11 @@ public class EmployeeTest extends BaseTest {
     public void filterEmployeeListByTwoCriteria() {
         PimEmployeeListPage list = new PimEmployeeListPage().open();
 
-        // Criteria come from the FILTER DROPDOWNS, not from a row on the current
-        // page. The first page of this environment happens to hold records with
-        // no job title or employment status at all, so deriving the criteria from
-        // a visible row finds nothing to filter on and the scenario gets skipped
-        // for a reason that has nothing to do with whether filtering works.
         List<String> statuses = list.getAvailableEmploymentStatuses();
         assertFalse(statuses.isEmpty(), "The environment should define employment statuses to filter by");
 
-        // Second criterion: Job Title where it is configured, otherwise Sub Unit.
-        // The public demo currently has NO job titles defined at all, so a test
-        // hard-wired to Job Title reports a broken filter when the truth is that
-        // there is nothing to filter by. Choosing from the criteria the
-        // environment actually offers keeps the scenario meaningful anywhere.
         List<SecondCriterion> secondCriteria = availableSecondCriteria(list);
 
-        // Search for a viable PAIR rather than committing to the first status
-        // that returns rows: plenty of these records carry a status but no job
-        // title, so a status chosen on its own can leave nothing to narrow by.
-        // Search across BOTH the criteria and the statuses for a combination that
-        // has data. Committing to one criterion up front fails whenever that
-        // column happens to be unpopulated for the first status that returns rows.
         String chosenStatus = null;
         String chosenSecondValue = null;
         SecondCriterion second = null;
@@ -366,9 +304,7 @@ public class EmployeeTest extends BaseTest {
                 if (rows.isEmpty()) {
                     continue;
                 }
-                // The value must exist as a DROPDOWN OPTION, not merely as text in
-                // a table cell -- a cell value with no matching option cannot be
-                // selected as a filter.
+
                 Optional<String> candidate = rows.stream()
                         .map(criterion.valueOf())
                         .filter(value -> !value.isBlank())
@@ -390,14 +326,11 @@ public class EmployeeTest extends BaseTest {
         assertNotNull(chosenSecondValue, "No filterable second-criterion value was found");
         System.out.println("Second filter criterion in use: " + second.label());
 
-        // Criterion 1: every returned row honours the Employment Status filter.
         for (PimEmployeeListPage.EmployeeRow row : statusRows) {
             assertEquals(row.employmentStatus(), chosenStatus,
                     "Every row should match the Employment Status filter");
         }
 
-        // Criterion 2: narrow further. Because the value was taken from these
-        // very results, the two filters are guaranteed to intersect.
         second.apply().accept(chosenSecondValue);
         list.clickSearch();
 
@@ -405,7 +338,6 @@ public class EmployeeTest extends BaseTest {
         assertFalse(filtered.isEmpty(),
                 "Filtering by a combination that exists should return at least one row");
 
-        // The point of the step: validate the DATA, not that a table is visible.
         for (PimEmployeeListPage.EmployeeRow row : filtered) {
             assertEquals(row.employmentStatus(), chosenStatus,
                     "Every row should match the Employment Status filter");
@@ -420,13 +352,11 @@ public class EmployeeTest extends BaseTest {
         checkpoint("10-employee-list-filtered");
     }
 
-    /** A filter this environment can actually offer, paired with how to read it back. */
     private record SecondCriterion(String label, List<String> options,
                                    java.util.function.Consumer<String> apply,
                                    java.util.function.Function<PimEmployeeListPage.EmployeeRow, String> valueOf) {
     }
 
-    /** Every second criterion this environment actually has options for. */
     private List<SecondCriterion> availableSecondCriteria(PimEmployeeListPage list) {
         List<SecondCriterion> candidates = List.of(
                 new SecondCriterion("Job Title", list.getAvailableJobTitles(),
@@ -455,17 +385,12 @@ public class EmployeeTest extends BaseTest {
         int unfilteredTotal = list.getRecordCount();
         assertTrue(unfilteredTotal > 0, "The unfiltered list should report a record count");
 
-        // Remember an employee the filter is about to exclude, so that "the
-        // expected result set came back" can be proven by that record actually
-        // reappearing -- not only by a total.
         String excludedLastName = list.getAllRows().stream()
                 .map(PimEmployeeListPage.EmployeeRow::lastName)
                 .filter(name -> !name.isBlank())
                 .findFirst()
                 .orElse("");
 
-        // Same reasoning as the previous test: take the criterion from the filter
-        // dropdown, and use the first one that actually narrows the result set.
         String chosenStatus = null;
         int filteredTotal = -1;
         for (String status : list.getAvailableEmploymentStatuses()) {
@@ -485,31 +410,20 @@ public class EmployeeTest extends BaseTest {
 
         list.clickReset();
 
-        // 1. The criterion itself is cleared.
         assertEquals(list.getSelectedEmploymentStatus(), "-- Select --",
                 "Reset should clear the Employment Status criterion");
 
-        // 2. The restriction is genuinely lifted.
         int afterReset = list.getRecordCount();
         assertTrue(afterReset > filteredTotal,
                 "Reset should return more records (" + afterReset + ") than the filtered set ("
                         + filteredTotal + ")");
 
-        // 3. The unfiltered total is back.
-        //
-        // Compared with a tolerance rather than for exact equality on purpose:
-        // this is a PUBLIC shared sandbox, and other people create and delete
-        // employees while the suite runs -- this run alone adds one. Asserting
-        // 254 == 252 would report the environment's own churn as a defect in the
-        // Reset button, which is the opposite of a useful test result.
         int drift = Math.abs(afterReset - unfilteredTotal);
         assertTrue(drift <= RESET_COUNT_TOLERANCE,
                 "Reset should restore the unfiltered result set: expected about " + unfilteredTotal
                         + " but found " + afterReset + " (drift of " + drift
                         + " exceeds the " + RESET_COUNT_TOLERANCE + " allowed for concurrent activity)");
 
-        // 4. A record the filter had excluded is visible again -- exact, and
-        //    immune to whatever the total happens to be.
         if (!excludedLastName.isBlank()) {
             assertTrue(list.findRowByLastName(excludedLastName).isPresent(),
                     "The employee '" + excludedLastName + "' excluded by the filter should be listed again");
@@ -520,7 +434,6 @@ public class EmployeeTest extends BaseTest {
         checkpoint("11-employee-list-filters-reset");
     }
 
-    /** Re-opens the record under test by URL -- avoids re-searching on every step. */
     private EmployeeDetailsPage openCreatedEmployeeRecord() {
         driver.get(Util.ConfigReader.baseUrl()
                 + "/web/index.php/pim/viewPersonalDetails/empNumber/" + empNumber);

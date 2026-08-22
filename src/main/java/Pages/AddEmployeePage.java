@@ -7,7 +7,6 @@ import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 
 public class AddEmployeePage extends BasePage {
-
     private static final String PATH = "/web/index.php/pim/addEmployee";
 
     private final By firstNameField = By.name("firstName");
@@ -71,10 +70,6 @@ public class AddEmployeePage extends BasePage {
         fillForm(employee);
         ElementsActions.clickElement(driver, saveButton);
 
-        // Read immediately after the click, before any wait. OrangeHRM toasts
-        // auto-dismiss well before the record page finishes loading, so asking for
-        // the toast once the page has settled loses it -- and the failure then
-        // reads "no success message" rather than "we looked too late".
         String saveToastText = ElementsActions.getToastMessage(driver);
         boolean saveToastWasSuccess = !saveToastText.isBlank()
                 && !Waits.isElementVisible(driver, By.cssSelector(".oxd-toast--error"), 1);

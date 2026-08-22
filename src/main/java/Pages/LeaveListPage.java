@@ -12,9 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** Used to prove a submitted leave request was persisted and can be found again. */
 public class LeaveListPage extends BasePage {
-
     private static final String PATH = "/web/index.php/leave/viewLeaveList";
 
     private final By fromDateField = inputByLabel("From Date");
@@ -23,7 +21,6 @@ public class LeaveListPage extends BasePage {
             "//div[contains(@class,'oxd-input-group')]"
                     + "[.//label[contains(normalize-space(),'Show Leave with Status')]]"
                     + "//div[contains(@class,'oxd-select-text')]");
-    private final By leaveTypeDropdown = dropdownByLabel("Leave Type");
     private final By employeeNameInput = By.xpath(
             "//div[contains(@class,'oxd-input-group')][.//label[normalize-space()='Employee Name']]"
                     + "//input[@placeholder='Type for hints...']");
@@ -32,7 +29,6 @@ public class LeaveListPage extends BasePage {
     private final By tableCard = By.cssSelector(".oxd-table-card");
     private final By tableCell = By.cssSelector(".oxd-table-cell");
 
-    /** Column order verified against the live Leave List header. */
     private static final int COL_DATE = 1;
     private static final int COL_EMPLOYEE_NAME = 2;
     private static final int COL_LEAVE_TYPE = 3;
@@ -54,10 +50,6 @@ public class LeaveListPage extends BasePage {
         return this;
     }
 
-    /**
-     * The status filter defaults to a subset that excludes admin-assigned leave,
-     * so it has to be cleared before searching for a freshly assigned request.
-     */
     @Step("Include leave with status {status}")
     public LeaveListPage includeStatus(String status) {
         ElementsActions.selectFromOxdDropdown(driver, statusDropdown, status);
@@ -69,12 +61,6 @@ public class LeaveListPage extends BasePage {
         return selectEmployeeByName(employeeNameInput, fullName);
     }
 
-    @Step("Filter by leave type {leaveType}")
-    public LeaveListPage setLeaveTypeFilter(String leaveType) {
-        ElementsActions.selectFromOxdDropdown(driver, leaveTypeDropdown, leaveType);
-        return this;
-    }
-
     @Step("Run the leave search")
     public LeaveListPage clickSearch() {
         ElementsActions.dismissToast(driver);
@@ -84,13 +70,6 @@ public class LeaveListPage extends BasePage {
         return this;
     }
 
-    /**
-     * Waits for the result table to actually render before it is read.
-     *
-     * As on the employee list, a row only counts once its CELLS exist: the card
-     * containers are painted first, so releasing on the container alone scrapes
-     * empty shells and reports a leave request that WAS created as missing.
-     */
     private void waitForResultsToSettle() {
         try {
             Waits.retryOnStale(driver, d -> {
@@ -103,8 +82,7 @@ public class LeaveListPage extends BasePage {
                 return d.findElements(tableCard).stream()
                         .anyMatch(card -> card.findElements(tableCell).size() > COL_STATUS);
             });
-        } catch (org.openqa.selenium.TimeoutException e) {
-            // Neither state appeared; leave the verdict to the assertions.
+        } catch (org.openqa.selenium.TimeoutException ignored) {
         }
     }
 
@@ -115,11 +93,6 @@ public class LeaveListPage extends BasePage {
         return this;
     }
 
-    public int getRowCount() {
-        return ElementsActions.countElements(driver, tableCard);
-    }
-
-    /** One consistent snapshot of the table; retried whole if it re-renders mid-read. */
     public List<LeaveRow> getAllRows() {
         return Waits.retryOnStale(driver, d -> {
             List<LeaveRow> rows = new ArrayList<>();
@@ -140,7 +113,6 @@ public class LeaveListPage extends BasePage {
         });
     }
 
-    /** Content-based lookup: the row belonging to a named employee. */
     public Optional<LeaveRow> findRowByEmployee(String employeeNameFragment) {
         return getAllRows().stream()
                 .filter(row -> row.employeeName().toLowerCase()
@@ -148,15 +120,6 @@ public class LeaveListPage extends BasePage {
                 .findFirst();
     }
 
-    /**
-     * Content-based lookup that re-runs the search before giving up.
-     *
-     * A leave request is written and then read back through a different query,
-     * and on this shared sandbox the row is occasionally not returned by the
-     * first search after the write. Re-running the search distinguishes "the
-     * request was never created" -- a real defect -- from "the list had not
-     * caught up yet", which is not.
-     */
     @Step("Locate leave for {employeeNameFragment}")
     public Optional<LeaveRow> findRowByEmployeeRetrying(String employeeNameFragment) {
         for (int attempt = 1; attempt <= 3; attempt++) {

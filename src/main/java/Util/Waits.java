@@ -14,14 +14,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.function.Function;
 
-/**
- * Every wait used by the framework. OrangeHRM 5.x is a Vue SPA, so elements are
- * routinely re-rendered under our feet -- StaleElementReferenceException is
- * ignored by these waits rather than being allowed to fail a test.
- */
 public final class Waits {
-
-    /** Full-screen spinner OrangeHRM shows on every table refresh and form save. */
     public static final By LOADER = By.cssSelector(".oxd-loading-spinner, .oxd-form-loader");
 
     private Waits() {
@@ -69,26 +62,8 @@ public final class Waits {
         return wait(driver).until(ExpectedConditions.urlContains(fragment));
     }
 
-    public static boolean waitForTextInElement(WebDriver driver, By locator, String text) {
-        return wait(driver).until(ExpectedConditions.textToBePresentInElementLocated(locator, text));
-    }
-
-    /**
-     * Waits for the OrangeHRM spinner to clear. Clicking through that spinner is
-     * the single biggest source of flakiness on this application.
-     */
     public static void waitForLoaderToDisappear(WebDriver driver) {
         waitForElementInvisible(driver, LOADER, ConfigReader.explicitWait());
-    }
-
-    /** Non-throwing presence probe -- used when asserting that something is absent. */
-    public static boolean isElementPresent(WebDriver driver, By locator, int seconds) {
-        try {
-            wait(driver, seconds).until(ExpectedConditions.presenceOfElementLocated(locator));
-            return true;
-        } catch (TimeoutException e) {
-            return false;
-        }
     }
 
     public static boolean isElementVisible(WebDriver driver, By locator, int seconds) {
@@ -100,7 +75,6 @@ public final class Waits {
         }
     }
 
-    /** Retries an action that may hit a stale element mid-render. */
     public static <T> T retryOnStale(WebDriver driver, Function<WebDriver, T> action) {
         FluentWait<WebDriver> fluentWait = new FluentWait<>(driver)
                 .withTimeout(Duration.ofSeconds(ConfigReader.explicitWait()))
