@@ -6,7 +6,6 @@ import Util.Waits;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 
-/** PIM → Add Employee. */
 public class AddEmployeePage extends BasePage {
 
     private static final String PATH = "/web/index.php/pim/addEmployee";
