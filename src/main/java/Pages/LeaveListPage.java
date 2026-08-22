@@ -15,6 +15,7 @@ import java.util.Optional;
 public class LeaveListPage extends BasePage {
     private static final String PATH = "/web/index.php/leave/viewLeaveList";
 
+    //Locators
     private final By fromDateField = inputByLabel("From Date");
     private final By toDateField = inputByLabel("To Date");
     private final By statusDropdown = By.xpath(
@@ -36,6 +37,7 @@ public class LeaveListPage extends BasePage {
     private static final int COL_NUMBER_OF_DAYS = 5;
     private static final int COL_STATUS = 6;
 
+    //PageActions
     @Step("Open Leave > Leave List")
     public LeaveListPage open() {
         openPath(PATH);

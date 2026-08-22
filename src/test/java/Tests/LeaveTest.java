@@ -5,7 +5,7 @@ import Pages.ApplyLeavePage;
 import Pages.AssignLeavePage;
 import Pages.LeaveEntitlementPage;
 import Pages.LeaveListPage;
-import Util.ConfigReader;
+import Util.Config;
 import Util.DataFactory;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
@@ -46,7 +46,7 @@ public class LeaveTest extends BaseTest {
         if (new ApplyLeavePage().isModuleForbidden()) {
             throw new SkipException(
                     "The Leave module returns '403 Module Forbidden' for user '"
-                            + dashboardPage.getLoggedInUserName() + "' on " + ConfigReader.baseUrl()
+                            + dashboardPage.getLoggedInUserName() + "' on " + Config.getInstance().getBaseUrl()
                             + ". The Leave scenarios cannot run until that account's role is granted "
                             + "access to the Leave module. This is an environment permission state, "
                             + "not a product defect and not a test failure.");
@@ -60,7 +60,7 @@ public class LeaveTest extends BaseTest {
     @Severity(SeverityLevel.MINOR)
     @Description("Documents the environment constraint that makes the self-service Apply screen "
             + "unusable for the Admin account, and pins it so a change in entitlement is noticed.")
-    public void applyLeaveScreenMatchesEntitlementState() {
+    public void verifyApplyLeaveScreenMatchesEntitlementState() {
         ApplyLeavePage apply = new ApplyLeavePage().open();
         ApplyLeavePage.State state = apply.getState();
 
@@ -88,7 +88,7 @@ public class LeaveTest extends BaseTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("Creates a dedicated employee and grants a leave entitlement, so the leave request "
             + "does not depend on pre-existing shared data.")
-    public void createEmployeeWithLeaveEntitlement() {
+    public void verifyUserCanCreateEmployeeWithLeaveEntitlement() {
         new AddEmployeePage().open().saveAndOpenRecord(leaveEmployee);
         registerForCleanup(leaveEmployee);
 
@@ -103,7 +103,7 @@ public class LeaveTest extends BaseTest {
         System.out.println("Using leave type: " + leaveType);
 
         entitlement.selectLeaveType(leaveType)
-                .setEntitlement("10")
+                .setEntitlement(DataFactory.entitlementDays())
                 .save();
 
         assertTrue(entitlement.wasLastActionSuccessful(),
@@ -113,15 +113,15 @@ public class LeaveTest extends BaseTest {
     }
 
     @Test(priority = 3, groups = {"smoke", "regression"},
-            dependsOnMethods = "createEmployeeWithLeaveEntitlement",
+            dependsOnMethods = "verifyUserCanCreateEmployeeWithLeaveEntitlement",
             description = "A leave request is submitted for calculated dates")
     @Story("Submit a leave request")
     @Severity(SeverityLevel.CRITICAL)
     @Description("Step 8a: submit a leave request using a runtime-calculated date range and verify "
             + "the success notification.")
-    public void submitLeaveRequest() {
+    public void verifyUserCanSubmitLeaveRequest() {
         AssignLeavePage assign = new AssignLeavePage().open();
-        assertTrue(assign.isDisplayed(), "Assign Leave form should be displayed");
+        assign.verifyAssignLeavePageLoaded();
 
         assertTrue(assign.selectEmployee(leaveEmployee.fullName()),
                 "The entitled employee should be selectable on Assign Leave");
@@ -148,13 +148,13 @@ public class LeaveTest extends BaseTest {
         assign.dismissToast();
     }
 
-    @Test(priority = 4, groups = {"regression"}, dependsOnMethods = "submitLeaveRequest",
+    @Test(priority = 4, groups = {"regression"}, dependsOnMethods = "verifyUserCanSubmitLeaveRequest",
             description = "The submitted leave request can be located afterwards")
     @Story("Submit a leave request")
     @Severity(SeverityLevel.CRITICAL)
     @Description("Step 8b: find the submitted request in the Leave List and verify its employee, "
             + "type, date range and day count -- proving it was persisted, not just announced.")
-    public void submittedLeaveCanBeFound() {
+    public void verifySubmittedLeaveCanBeFound() {
         LeaveListPage leaveList = new LeaveListPage().open();
 
         leaveList.includeStatus("Scheduled");

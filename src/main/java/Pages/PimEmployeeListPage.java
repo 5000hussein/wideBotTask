@@ -1,6 +1,7 @@
 package Pages;
 
 import Util.ElementsActions;
+import Util.Validations;
 import Util.Waits;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
 public class PimEmployeeListPage extends BasePage {
     private static final String PATH = "/web/index.php/pim/viewEmployeeList";
 
+    //Locators
     private final By employeeNameInput = By.xpath(
             "//div[contains(@class,'oxd-input-group')][.//label[normalize-space()='Employee Name']]"
                     + "//input[@placeholder='Type for hints...']");
@@ -39,6 +41,7 @@ public class PimEmployeeListPage extends BasePage {
     private static final int COL_SUB_UNIT = 6;
     private static final int COL_SUPERVISOR = 7;
 
+    //PageActions
     @Step("Open PIM > Employee List")
     public PimEmployeeListPage open() {
         openPath(PATH);
@@ -47,10 +50,6 @@ public class PimEmployeeListPage extends BasePage {
         return this;
     }
 
-    public boolean isDisplayed() {
-        return ElementsActions.isDisplayed(driver, searchButton)
-                && ElementsActions.isDisplayed(driver, employeeIdInput);
-    }
 
     @Step("Filter by employee name: {fullName}")
     public boolean setEmployeeNameFilter(String fullName) {
@@ -214,5 +213,13 @@ public class PimEmployeeListPage extends BasePage {
         public String fullName() {
             return (firstAndMiddleName + " " + lastName).trim();
         }
+    }
+
+    //PageAssertions
+    public void verifyEmployeeListPageLoaded() {
+        Validations.validateTrue(
+                ElementsActions.isDisplayed(driver, searchButton)
+                        && ElementsActions.isDisplayed(driver, employeeIdInput),
+                "Employee List page did not load");
     }
 }

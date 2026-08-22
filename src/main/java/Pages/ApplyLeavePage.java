@@ -8,11 +8,13 @@ import org.openqa.selenium.By;
 public class ApplyLeavePage extends BasePage {
     private static final String PATH = "/web/index.php/leave/applyLeave";
 
+    //Locators
     private final By noBalanceMessage = By.xpath(
             "//*[contains(normalize-space(),'No Leave Types with Leave Balance')]");
     private final By leaveTypeDropdown = dropdownByLabel("Leave Type");
     private final By applyButton = By.cssSelector("button[type='submit']");
 
+    //PageActions
     @Step("Open Leave > Apply")
     public ApplyLeavePage open() {
         openPath(PATH);

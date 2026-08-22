@@ -3,9 +3,9 @@
 A single page to hold the whole repo in your head. Read top to bottom once; after that
 the section headings are enough.
 
-**Size check:** 30 Java files, ~4,300 lines, 19 tests. That sounds like a lot until you see
+**Size check:** 32 Java files, ~3,460 lines, 19 tests. That sounds like a lot until you see
 that 10 of those files are page objects (one per screen) and 6 are throwaway debugging
-probes. There is no dead code — every class is referenced by something else.
+probes. There is no dead code — every class and every public method is called by something.
 
 ---
 
@@ -28,22 +28,27 @@ behind it.
 ```mermaid
 flowchart TD
     A["<b>Tests</b><br/>Tests/*.java<br/><i>own every assertion</i>"]
-    B["<b>Page Objects</b><br/>Pages/*.java<br/><i>express intent, never assert</i>"]
+    B["<b>Page Objects</b><br/>Pages/*.java<br/><i>actions + page-state checks</i>"]
     C["<b>ElementsActions</b><br/>one file<br/><i>all OrangeHRM DOM quirks live here</i>"]
-    D["<b>Utilities</b><br/>Drivers · Waits · ConfigReader · DataFactory"]
+    D["<b>Utilities</b><br/>Drivers · Waits · Config · DataFactory"]
 
     A --> B --> C --> D
 ```
 
-**The rule that keeps it clean: a page object never contains an assertion.**
-`PimEmployeeListPage.findRowByLastName()` returns an `Optional<EmployeeRow>` — it does not
-assert the row exists. That's why the same method serves a positive test (*"the employee I
-created is there"*) and the cleanup routine (*"is it still there? if not, fine, move on"*).
-If the page asserted, one of those two callers would be fighting it.
+**The rule that keeps it clean: pages assert *page state*, tests assert *business outcomes*.**
+
+A page may say "this screen loaded" — `verifyAddEmployeePageLoaded()` — because that is a fact
+about the page itself, and every caller wants the same answer.
+
+A page must **not** say "the employee was created", because different callers want different
+answers. `PimEmployeeListPage.findRowByLastName()` returns an `Optional<EmployeeRow>` rather
+than asserting: the positive test wants *"it's there"*, the cleanup routine wants *"is it still
+there? if not, fine, move on"*, and a negative test wants *"it must NOT be there"*. One
+assertion baked into the page would fight two of those three callers.
 
 **Why `ElementsActions` exists.** Without it, every OrangeHRM workaround would be copy-pasted
-across 10 page objects. Instead: one method, one comment explaining the quirk, one place to
-fix it. This is the file to open if an interviewer asks "show me something you're proud of."
+across 10 page objects. Instead: one method, one place to fix it. This is the file to open if
+an interviewer asks "show me something you're proud of."
 
 ---
 
@@ -56,25 +61,55 @@ If you only revise six, revise these.
 | `Util/ElementsActions.java` | Every interaction with the app | Every OrangeHRM quirk is here, each with a comment saying *why* |
 | `Util/Waits.java` | Every wait | **Zero implicit waits.** All explicit. Mixing the two makes timeouts unpredictable |
 | `Util/Drivers.java` | Driver lifecycle | `ThreadLocal` so `parallel="classes"` works; Selenium Manager means no driver binaries |
-| `Util/ConfigReader.java` | Configuration | 3-tier: system property → env var → properties file |
+| `Util/Config.java` | Configuration | 3-tier: system property → env var → config.yaml |
 | `Pages/BasePage.java` | Shared page behaviour | Navigation, toast capture, field-error reading, label-based locators |
 | `Tests/BaseTest.java` | Lifecycle + test data | Driver per **class**, login, and cleanup of everything created |
 
 Everything else is an application of these six.
 
+### Conventions used everywhere
+
+Every page object is laid out in the same three sections, so anything is findable in seconds:
+
+```java
+public class AddEmployeePage extends BasePage {
+
+    //Locators
+    private final By firstNameField = By.name("firstName");
+
+    //PageActions
+    public AddEmployeePage enterFirstName(String firstName) { ... }
+
+    //PageAssertions
+    public void verifyAddEmployeePageLoaded() {
+        Validations.validateTrue(..., "Add Employee form did not load");
+    }
+}
+```
+
+- **Comments** — code says *what*, so a comment only ever explains *why*, and only where the
+  reason is non-obvious (the `yyyy-dd-MM` date format, the `ORANGEHRM_` env prefix). Test
+  intent lives in `@Description`, which also reaches the Allure report.
+- **Assertions** go through `Validations`, so every failure message reads the same way.
+- **Test data** is never a literal in a test — it comes from `data.json` via `DataFactory`.
+- **Config** is never a literal either — `Config.getInstance()`, backed by `config.yaml`.
+- **Test names** read as sentences: `verifyUserCanCreateNewEmployee`.
+
 ---
 
 ## 4. Full file map — one line each
 
-**`src/main/java/Util/` — the plumbing (7 files)**
+**`src/main/java/Util/` — the plumbing (9 files)**
 
 | File | Does |
 |---|---|
 | `Drivers` | Creates/quits Chrome, Firefox or Edge in a `ThreadLocal`. Headless flag. No implicit wait. |
 | `Waits` | All explicit waits + `waitForLoaderToDisappear` + `retryOnStale`. Ignores `StaleElementReference`. |
 | `ElementsActions` | Click, type, dropdowns, autocompletes, dates, toasts. The quirk vault. |
-| `ConfigReader` | Reads config with property → env → file precedence. |
-| `DataFactory` | Generates unique employees (Datafaker + run tag) and calculates leave dates. |
+| `DataFactory` | Builds unique employees from `data.json` + the run tag, and calculates leave dates. |
+| `Config` | Singleton over `config.yaml`, with `-D` and env-var overrides. |
+| `Helper` | Reads a value out of `TestData/data.json`. |
+| `Validations` | Thin wrapper over TestNG `Assert`, so assertions read the same everywhere. |
 | `ScreenshotUtil` | Saves a PNG to disk and attaches it to Allure. |
 | `Scrolling` | Scrolls an element into view. Used only by `ElementsActions`. |
 
@@ -115,14 +150,14 @@ the actual DOM, then fixed the locator against evidence."*
 
 ## 5. Trace one test end to end
 
-`LeaveTest.submitLeaveRequest()` — the most representative path in the repo:
+`LeaveTest.verifyUserCanSubmitLeaveRequest()` — the most representative path in the repo:
 
 1. `BaseTest.setUp()` — `@BeforeClass` — builds the driver, opens the login page.
 2. `LeaveTest.signIn()` — logs in, generates the employee, calculates dates, and **probes for
    a 403** on the Leave module (§6).
-3. `createEmployeeWithLeaveEntitlement()` — creates the employee, registers it for cleanup,
+3. `verifyUserCanCreateEmployeeWithLeaveEntitlement()` — creates the employee, registers it for cleanup,
    grants 10 days of entitlement.
-4. `submitLeaveRequest()` — the test itself:
+4. `verifyUserCanSubmitLeaveRequest()` — the test itself:
    - `new AssignLeavePage().open()` → `BasePage.openPath()` → waits for the app shell, then
      the loader.
    - `assign.selectEmployee(...)` → `BasePage.selectEmployeeByName()` → types the **last name
@@ -131,7 +166,7 @@ the actual DOM, then fixed the locator against evidence."*
      sends `ESCAPE` to close the picker.
    - `assign.clickAssign()` → clicks, then **immediately** `captureToast()`.
    - The test asserts `wasLastActionSuccessful()`. **The assertion is in the test, not the page.**
-5. `submittedLeaveCanBeFound()` — reopens Leave List and finds the record, proving it was
+5. `verifySubmittedLeaveCanBeFound()` — reopens Leave List and finds the record, proving it was
    *persisted*, not merely announced by a toast.
 6. `BaseTest.tearDown()` — `@AfterClass` — deletes the created employee, then quits the driver.
 
@@ -159,7 +194,7 @@ an employee hit the duplicate-Employee-Id validation, so the form never navigate
 blip became a confusing failure with an unrelated message. Retry is only safe where the test is
 idempotent, so it's attached only to read-only tests.
 
-**Why does `ConfigReader` prefix environment variables with `ORANGEHRM_`?**
+**Why does `Config` prefix environment variables with `ORANGEHRM_`?**
 Because an unprefixed lookup collided with the OS. On Windows `%USERNAME%` is the logged-in
 account, so a bare `USERNAME` lookup silently resolved to *my own login* and every test failed
 with "Invalid credentials". Genuinely my favourite bug in the repo.
@@ -178,8 +213,8 @@ Without an explicit check, every Leave test burns its full timeout and then repo
 button — which reads like a broken locator or a product defect. Detecting the 403 turns that
 into an accurate, immediate statement: *this is an environment permission state, not a failure.*
 
-**Why is `createEmployeeWithLeaveEntitlement` in both the smoke and regression groups?**
-Because `submitLeaveRequest` is a smoke test and depends on it, and TestNG refuses to run a
+**Why is `verifyUserCanCreateEmployeeWithLeaveEntitlement` in both the smoke and regression groups?**
+Because `verifyUserCanSubmitLeaveRequest` is a smoke test and depends on it, and TestNG refuses to run a
 group whose members depend on excluded methods. **A group must be closed over its dependencies.**
 `-Dgroups=smoke` ran zero tests until I fixed this.
 
@@ -199,7 +234,7 @@ Each of these is a real bug I hit and fixed. Pick two or three.
 | Employee Id read as `""` right after creation | Personal Details renders inputs empty, then populates. Added a `waitForRecordToLoad()` gate. |
 | Leave types list came back empty | The list only populates *after* an employee is chosen. Reordered the steps. |
 | Allure showed no step detail on Java 25 | AspectJ weaver < 1.9.24 aborts with `Unsupported class file major version 69` — silently. Bumped to 1.9.24. |
-| `resetRestoresFullResultSet` expected 252, found 254 | Other people creating employees mid-run. Replaced exact equality with a tolerance plus proof that an excluded employee reappears. |
+| `verifyResetRestoresFullResultSet` expected 252, found 254 | Other people creating employees mid-run. Replaced exact equality with a tolerance plus proof that an excluded employee reappears. |
 
 **The habit behind all of these:** classify before fixing — *product defect*, *test defect*, or
 *environment*. A green suite bought by weakening an assertion is worse than a red one.
@@ -211,7 +246,7 @@ Each of these is a real bug I hit and fixed. Pick two or three.
 ```bash
 mvn clean test                                    # everything
 mvn test -Dtest=EmployeeTest                      # one class
-mvn test -Dtest=EmployeeTest#createNewEmployee    # one method
+mvn test -Dtest=EmployeeTest#verifyUserCanCreateNewEmployee    # one method
 mvn test -DsuiteXmlFile=suites/smoke.xml          # one suite file
 mvn test -Dgroups=smoke                           # one group
 mvn allure:serve                                  # open the report

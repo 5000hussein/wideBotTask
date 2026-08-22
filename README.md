@@ -78,7 +78,8 @@ place on the PATH.
 | Selenium WebDriver | 4.27.0 | Browser automation; Selenium Manager removes driver management entirely |
 | TestNG | 7.10.2 | Groups, suites, dependencies and priorities — the execution model the assessment asks for |
 | Allure | 2.29.0 | Execution report with steps, severity, durations and embedded evidence |
-| Datafaker | 2.4.2 | Runtime test-data generation |
+| SnakeYAML | 2.3 | Reads `config.yaml` |
+| Gson | 2.11.0 | Reads `TestData/data.json` |
 | Maven Surefire | 3.5.2 | Test execution and CLI parameterisation |
 | SLF4J Simple | 2.0.16 | Quiet, predictable logging |
 
@@ -97,13 +98,16 @@ Layered, so that a UI change touches exactly one layer.
           |
         Drivers                browser lifecycle (ThreadLocal)
           |
-   ConfigReader / DataFactory  environment values and generated data
+   Config / DataFactory  environment values and generated data
 ```
 
 **Design decisions worth calling out:**
 
-- **Page objects never assert.** They expose state; tests decide correctness. That is what lets
-  a single page object serve both a positive and a negative test.
+- **Pages assert page state; tests assert business outcomes.** A page may say "this screen
+  loaded" (`verifyAddEmployeePageLoaded()`) because every caller wants the same answer. A page
+  must not say "the employee was created" — the positive test, the cleanup routine and the
+  negative test each want a different answer from `findRowByLastName()`, so it returns an
+  `Optional` and lets the caller decide.
 - **No implicit waits.** Mixing implicit and explicit waits makes timeouts unpredictable. Every
   wait is explicit and waits for the *meaningful* state — a table row **with cells**, a field
   **with a value** — not a proxy that resolves too early.
@@ -141,15 +145,19 @@ Layered, so that a UI change touches exactly one layer.
 │   │   ├── LeaveEntitlementPage.java
 │   │   └── LeaveListPage.java
 │   └── Util/
-│       ├── ConfigReader.java        # system property → env var → config.properties
+│       ├── Config.java              # singleton over config.yaml: -D → env var → file
 │       ├── Drivers.java             # ThreadLocal WebDriver, chrome/firefox/edge, headless
 │       ├── Waits.java               # every wait, stale-tolerant
 │       ├── Scrolling.java
 │       ├── ElementsActions.java     # all oxd-component interaction rules
 │       ├── DataFactory.java         # unique data + app-format dates
+│       ├── Helper.java              # reads TestData/data.json
+│       ├── Validations.java         # assertion wrapper
 │       └── ScreenshotUtil.java      # disk + Allure attachment
 ├── src/main/resources/
-│   └── config.properties
+│   ├── config.yaml
+│   └── TestData/
+│       └── data.json                # every literal the tests type
 ├── src/test/java/
 │   ├── Tests/
 │   │   ├── BaseTest.java            # lifecycle + test-data ownership/cleanup
@@ -187,7 +195,7 @@ mvn test -Dtest=EmployeeTest
 ### Run a single test method
 
 ```bash
-mvn test -Dtest=EmployeeTest#createNewEmployee
+mvn test -Dtest=EmployeeTest#verifyUserCanCreateNewEmployee
 ```
 
 ### Run a TestNG suite
@@ -294,25 +302,29 @@ Two kinds, both written to `screenshots/` **and** embedded in the Allure report:
 
 ## Configuration
 
-All environment values live in `src/main/resources/config.properties`. **No credential or URL
+All environment values live in `src/main/resources/config.yaml`. **No credential or URL
 appears in any test class.**
 
-```properties
-base.url=https://opensource-demo.orangehrmlive.com
-username=Admin
-password=admin123
-browser=chrome
-headless=true
-timeout.explicit=20
-timeout.pageload=45
-cleanup.enabled=true
+```yaml
+base_url: https://opensource-demo.orangehrmlive.com
+username: Admin
+password: admin123
+browser: chrome
+headless: true
+explicit_wait: 20
+page_load_timeout: 45
+cleanup_enabled: true
 ```
 
 Resolution order — first hit wins:
 
 1. **System property** — `-Dusername=qa -Dpassword=***`
 2. **Environment variable** — `ORANGEHRM_USERNAME`, `ORANGEHRM_PASSWORD`, `ORANGEHRM_BASE_URL`
-3. **`config.properties`**
+3. **`config.yaml`**
+
+Test-data literals are separate, in `src/main/resources/TestData/data.json` — name prefixes,
+the entitlement day count, the over-length string, the wrong password. Nothing the suite types
+into the application is a literal in a test class.
 
 So pointing the suite at a private environment is a config change, never a code change:
 
@@ -378,25 +390,25 @@ cleanup cannot complete.
 
 | Step | Requirement | Test | Groups |
 |---|---|---|---|
-| 1 | Login page displayed, fields and button available | `LoginTest.loginPageIsDisplayedWithAllControls` | smoke, regression |
-| 1 | Login succeeds, dashboard shown, user identified | `LoginTest.validLoginLandsOnDashboard` | smoke, regression |
-| 2 | Employee search returns matching results | `EmployeeTest.searchExistingEmployeeByName` | smoke, regression |
-| 3 | Create employee from generated data | `EmployeeTest.createNewEmployee` | smoke, regression |
-| 4 | Created employee found in the list | `EmployeeTest.createdEmployeeIsFoundInEmployeeList` | regression |
-| 4 | Record opens with correct data and accessible tabs | `EmployeeTest.openCreatedEmployeeRecordAndValidateDetails` | regression |
-| 5 | Edit employee fields, update confirmed | `EmployeeTest.editEmployeeInformation` | regression |
-| 6 | Update survives a refresh | `EmployeeTest.updatedInformationSurvivesRefresh` | regression |
-| 6 | Update survives navigating away and back | `EmployeeTest.updatedInformationSurvivesNavigationAway` | regression |
-| 7 | Two filter criteria; returned **data** validated | `EmployeeTest.filterEmployeeListByTwoCriteria` | regression |
-| 7 | Reset restores the expected result set | `EmployeeTest.resetRestoresFullResultSet` | regression |
-| 8 | Apply-leave screen state | `LeaveTest.applyLeaveScreenMatchesEntitlementState` | regression |
-| 8 | Employee + entitlement prerequisites | `LeaveTest.createEmployeeWithLeaveEntitlement` | regression |
-| 8 | Leave request submitted, confirmed | `LeaveTest.submitLeaveRequest` | smoke, regression |
-| 8 | Submitted leave located afterwards | `LeaveTest.submittedLeaveCanBeFound` | regression |
-| 9A | Required field empty → rejected | `NegativeTest.cannotCreateEmployeeWithoutLastName` | negative, regression |
-| 9B | Invalid (over-length) data → rejected | `NegativeTest.cannotCreateEmployeeWithOverlongFirstName` | negative, regression |
-| 9C | Invalid leave dates → rejected | `NegativeTest.cannotAssignLeaveWithEndDateBeforeStartDate` | negative, regression |
-| 9D | Invalid credentials → rejected | `NegativeTest.invalidCredentialsAreRejected` | negative, regression |
+| 1 | Login page displayed, fields and button available | `LoginTest.verifyLoginPageIsDisplayedWithAllControls` | smoke, regression |
+| 1 | Login succeeds, dashboard shown, user identified | `LoginTest.verifyUserCanLoginWithValidCredentials` | smoke, regression |
+| 2 | Employee search returns matching results | `EmployeeTest.verifyUserCanSearchForAnExistingEmployee` | smoke, regression |
+| 3 | Create employee from generated data | `EmployeeTest.verifyUserCanCreateNewEmployee` | smoke, regression |
+| 4 | Created employee found in the list | `EmployeeTest.verifyCreatedEmployeeIsFoundInEmployeeList` | regression |
+| 4 | Record opens with correct data and accessible tabs | `EmployeeTest.verifyCreatedEmployeeRecordShowsCorrectDetails` | regression |
+| 5 | Edit employee fields, update confirmed | `EmployeeTest.verifyUserCanEditEmployeeInformation` | regression |
+| 6 | Update survives a refresh | `EmployeeTest.verifyUpdatedInformationSurvivesRefresh` | regression |
+| 6 | Update survives navigating away and back | `EmployeeTest.verifyUpdatedInformationSurvivesNavigationAway` | regression |
+| 7 | Two filter criteria; returned **data** validated | `EmployeeTest.verifyUserCanFilterEmployeeListByTwoCriteria` | regression |
+| 7 | Reset restores the expected result set | `EmployeeTest.verifyResetRestoresFullResultSet` | regression |
+| 8 | Apply-leave screen state | `LeaveTest.verifyApplyLeaveScreenMatchesEntitlementState` | regression |
+| 8 | Employee + entitlement prerequisites | `LeaveTest.verifyUserCanCreateEmployeeWithLeaveEntitlement` | regression |
+| 8 | Leave request submitted, confirmed | `LeaveTest.verifyUserCanSubmitLeaveRequest` | smoke, regression |
+| 8 | Submitted leave located afterwards | `LeaveTest.verifySubmittedLeaveCanBeFound` | regression |
+| 9A | Required field empty → rejected | `NegativeTest.verifyEmployeeCannotBeCreatedWithoutLastName` | negative, regression |
+| 9B | Invalid (over-length) data → rejected | `NegativeTest.verifyEmployeeCannotBeCreatedWithOverlongFirstName` | negative, regression |
+| 9C | Invalid leave dates → rejected | `NegativeTest.verifyLeaveCannotBeAssignedWithEndDateBeforeStartDate` | negative, regression |
+| 9D | Invalid credentials → rejected | `NegativeTest.verifyInvalidCredentialsAreRejected` | negative, regression |
 | 10 | Test-data cleanup | `BaseTest.cleanUpCreatedEmployees` + this README | — |
 
 ### How the "no hard-coded row number" requirement is met
@@ -456,7 +468,7 @@ execution, and the framework is built to report these honestly rather than disgu
   `Emp_NfJwbv User_WjuoigBT`, then `Donald Trump`. Assertions therefore never depend on a
   specific pre-existing name.
 - **Record counts drift during a run** as other users create and delete employees, so
-  `resetRestoresFullResultSet` compares against a tolerance and additionally proves an excluded
+  `verifyResetRestoresFullResultSet` compares against a tolerance and additionally proves an excluded
   record reappears — rather than asserting an exact global count.
 - **Reference data disappears.** Job titles, leave types and sub units have each been absent at
   some point. No filter value is ever hard-coded.

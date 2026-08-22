@@ -1,6 +1,6 @@
 package Pages;
 
-import Util.ConfigReader;
+import Util.Config;
 import Util.Drivers;
 import Util.ElementsActions;
 import Util.Waits;
@@ -10,6 +10,7 @@ import org.openqa.selenium.WebDriver;
 public abstract class BasePage {
     protected final WebDriver driver;
 
+    //Locators
     protected static final By BREADCRUMB_MODULE = By.cssSelector(".oxd-topbar-header-breadcrumb-module");
     protected static final By USER_DROPDOWN_NAME = By.cssSelector(".oxd-userdropdown-name");
     protected static final By USER_DROPDOWN_TAB = By.cssSelector(".oxd-userdropdown-tab");
@@ -23,8 +24,9 @@ public abstract class BasePage {
         this.driver = Drivers.getDriver();
     }
 
+    //PageActions
     protected void openPath(String path) {
-        driver.get(ConfigReader.baseUrl() + path);
+        driver.get(Config.getInstance().getBaseUrl() + path);
 
         try {
             Waits.waitForElementPresent(driver, By.cssSelector(

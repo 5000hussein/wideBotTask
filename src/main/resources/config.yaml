@@ -1,0 +1,8 @@
+base_url: https://opensource-demo.orangehrmlive.com
+username: Admin
+password: admin123
+browser: chrome
+headless: true
+explicit_wait: 20
+page_load_timeout: 45
+cleanup_enabled: true

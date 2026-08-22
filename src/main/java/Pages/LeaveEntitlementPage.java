@@ -8,6 +8,7 @@ import org.openqa.selenium.By;
 public class LeaveEntitlementPage extends BasePage {
     private static final String PATH = "/web/index.php/leave/addLeaveEntitlement";
 
+    //Locators
     private final By employeeNameInput = By.xpath(
             "//div[contains(@class,'oxd-input-group')][.//label[normalize-space()='Employee Name']]"
                     + "//input[@placeholder='Type for hints...']");
@@ -16,6 +17,7 @@ public class LeaveEntitlementPage extends BasePage {
     private final By saveButton = By.cssSelector("button[type='submit']");
     private final By confirmButton = By.xpath("//button[contains(normalize-space(),'Confirm')]");
 
+    //PageActions
     @Step("Open Leave > Add Entitlement")
     public LeaveEntitlementPage open() {
         openPath(PATH);

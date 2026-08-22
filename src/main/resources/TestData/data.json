@@ -1,0 +1,13 @@
+{
+  "firstName": "Automation",
+  "middleName": "Test",
+  "lastNamePrefix": "QA",
+  "employeeIdPrefix": "EMP",
+  "updatedFirstNamePrefix": "Updated",
+  "updatedEmployeeIdPrefix": "UPD",
+  "negativeFirstNamePrefix": "Negative",
+  "negativeLastNamePrefix": "Overflow",
+  "overlongFirstNameLength": "60",
+  "entitlementDays": "10",
+  "invalidPassword": "definitely-not-the-password"
+}

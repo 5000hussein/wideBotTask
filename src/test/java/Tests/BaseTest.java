@@ -4,7 +4,7 @@ import Listeners.TestListener;
 import Pages.DashboardPage;
 import Pages.LoginPage;
 import Pages.PimEmployeeListPage;
-import Util.ConfigReader;
+import Util.Config;
 import Util.DataFactory;
 import Util.Drivers;
 import Util.ScreenshotUtil;
@@ -31,10 +31,10 @@ public abstract class BaseTest {
     @Parameters({"browser"})
     public void setUp(@Optional String browserFromSuite) {
         String browser = browserFromSuite == null || browserFromSuite.isBlank()
-                ? ConfigReader.browser()
+                ? Config.getInstance().getBrowser()
                 : browserFromSuite;
 
-        driver = Drivers.setUpDriver(browser, ConfigReader.headless());
+        driver = Drivers.setUpDriver(browser, Config.getInstance().isHeadless());
         loginPage = new LoginPage().open();
     }
 
@@ -61,7 +61,7 @@ public abstract class BaseTest {
         if (createdEmployees.isEmpty()) {
             return;
         }
-        if (!ConfigReader.cleanupEnabled()) {
+        if (!Config.getInstance().isCleanupEnabled()) {
             System.out.println("Cleanup disabled (cleanup.enabled=false). Records left in place: "
                     + createdEmployees.stream().map(DataFactory.Employee::lastName).toList());
             return;

@@ -1,6 +1,6 @@
 package Tools;
 
-import Util.ConfigReader;
+import Util.Config;
 import Util.Drivers;
 import Util.Waits;
 import org.openqa.selenium.By;
@@ -34,17 +34,17 @@ public class FormProbe {
     }
 
     private static void login() {
-        driver.get(ConfigReader.baseUrl() + "/web/index.php/auth/login");
+        driver.get(Config.getInstance().getBaseUrl() + "/web/index.php/auth/login");
         Waits.waitForElementVisible(driver, By.name("username"));
-        driver.findElement(By.name("username")).sendKeys(ConfigReader.username());
-        driver.findElement(By.name("password")).sendKeys(ConfigReader.password());
+        driver.findElement(By.name("username")).sendKeys(Config.getInstance().getUsername());
+        driver.findElement(By.name("password")).sendKeys(Config.getInstance().getPassword());
         driver.findElement(By.cssSelector("button[type='submit']")).click();
         Waits.waitForUrlContains(driver, "dashboard");
         sleep(2000);
     }
 
     private static void screen(String name, String path) {
-        driver.get(ConfigReader.baseUrl() + path);
+        driver.get(Config.getInstance().getBaseUrl() + path);
         Waits.waitForLoaderToDisappear(driver);
         sleep(2500);
         System.out.println("\n=========== " + name + " ===========");

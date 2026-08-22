@@ -2,7 +2,7 @@ package Tests;
 
 import Pages.DashboardPage;
 import Pages.LoginPage;
-import Util.ConfigReader;
+import Util.Config;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -25,7 +25,7 @@ public class LoginTest extends BaseTest {
     @Story("Login page is displayed")
     @Severity(SeverityLevel.BLOCKER)
     @Description("Step 1a: the login page and each of its three required controls are present.")
-    public void loginPageIsDisplayedWithAllControls() {
+    public void verifyLoginPageIsDisplayedWithAllControls() {
         LoginPage login = new LoginPage().open();
 
         assertTrue(login.isLoginPageDisplayed(), "Login page (title + branding) should be displayed");
@@ -38,12 +38,12 @@ public class LoginTest extends BaseTest {
     }
 
     @Test(priority = 2, groups = {"smoke", "regression"},
-            dependsOnMethods = "loginPageIsDisplayedWithAllControls",
+            dependsOnMethods = "verifyLoginPageIsDisplayedWithAllControls",
             description = "Valid credentials sign in and land on the dashboard")
     @Story("Successful login")
     @Severity(SeverityLevel.BLOCKER)
     @Description("Step 1b: login succeeds, the dashboard renders, and the signed-in user is identified.")
-    public void validLoginLandsOnDashboard() {
+    public void verifyUserCanLoginWithValidCredentials() {
         DashboardPage dashboard = new LoginPage().open().loginWithValidCredentials();
 
         assertTrue(dashboard.isDashboardDisplayed(),
@@ -57,7 +57,7 @@ public class LoginTest extends BaseTest {
                 "The signed-in user's menu should be displayed");
         String displayedUser = dashboard.getLoggedInUserName();
         assertFalse(displayedUser.isBlank(), "Signed-in user name should not be blank");
-        assertNotEquals(displayedUser, ConfigReader.username(),
+        assertNotEquals(displayedUser, Config.getInstance().getUsername(),
                 "OrangeHRM shows the employee's full name, not the login id");
 
         System.out.println("Signed in as: " + displayedUser);

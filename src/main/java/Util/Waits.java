@@ -21,7 +21,7 @@ public final class Waits {
     }
 
     private static WebDriverWait wait(WebDriver driver) {
-        return wait(driver, ConfigReader.explicitWait());
+        return wait(driver, Config.getInstance().getExplicitWait());
     }
 
     private static WebDriverWait wait(WebDriver driver, int seconds) {
@@ -63,7 +63,7 @@ public final class Waits {
     }
 
     public static void waitForLoaderToDisappear(WebDriver driver) {
-        waitForElementInvisible(driver, LOADER, ConfigReader.explicitWait());
+        waitForElementInvisible(driver, LOADER, Config.getInstance().getExplicitWait());
     }
 
     public static boolean isElementVisible(WebDriver driver, By locator, int seconds) {
@@ -77,7 +77,7 @@ public final class Waits {
 
     public static <T> T retryOnStale(WebDriver driver, Function<WebDriver, T> action) {
         FluentWait<WebDriver> fluentWait = new FluentWait<>(driver)
-                .withTimeout(Duration.ofSeconds(ConfigReader.explicitWait()))
+                .withTimeout(Duration.ofSeconds(Config.getInstance().getExplicitWait()))
                 .pollingEvery(Duration.ofMillis(300))
                 .ignoring(StaleElementReferenceException.class)
                 .ignoring(NoSuchElementException.class);

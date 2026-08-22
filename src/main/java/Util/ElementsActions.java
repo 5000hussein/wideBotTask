@@ -65,7 +65,7 @@ public final class ElementsActions {
     }
 
     public static boolean isDisplayed(WebDriver driver, By locator) {
-        return Waits.isElementVisible(driver, locator, ConfigReader.explicitWait());
+        return Waits.isElementVisible(driver, locator, Config.getInstance().getExplicitWait());
     }
 
     public static int countElements(WebDriver driver, By locator) {

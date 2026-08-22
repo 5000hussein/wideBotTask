@@ -1,6 +1,7 @@
 package Pages;
 
 import Util.DataFactory;
+import Util.Validations;
 import Util.ElementsActions;
 import Util.Waits;
 import io.qameta.allure.Step;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 public class AssignLeavePage extends BasePage {
     private static final String PATH = "/web/index.php/leave/assignLeave";
 
+    //Locators
     private final By employeeNameInput = By.xpath(
             "//div[contains(@class,'oxd-input-group')][.//label[normalize-space()='Employee Name']]"
                     + "//input[@placeholder='Type for hints...']");
@@ -26,6 +28,7 @@ public class AssignLeavePage extends BasePage {
     private final By confirmationOkButton = By.xpath(
             "//div[contains(@class,'oxd-dialog-container')]//button[normalize-space()='Ok']");
 
+    //PageActions
     @Step("Open Leave > Assign Leave")
     public AssignLeavePage open() {
         openPath(PATH);
@@ -33,10 +36,6 @@ public class AssignLeavePage extends BasePage {
         return this;
     }
 
-    public boolean isDisplayed() {
-        return ElementsActions.isDisplayed(driver, assignButton)
-                && ElementsActions.isDisplayed(driver, fromDateField);
-    }
 
     @Step("Select employee {fullName}")
     public boolean selectEmployee(String fullName) {
@@ -105,5 +104,13 @@ public class AssignLeavePage extends BasePage {
 
     public boolean isStillOnAssignPage() {
         return driver.getCurrentUrl().contains("assignLeave");
+    }
+
+    //PageAssertions
+    public void verifyAssignLeavePageLoaded() {
+        Validations.validateTrue(
+                ElementsActions.isDisplayed(driver, assignButton)
+                        && ElementsActions.isDisplayed(driver, fromDateField),
+                "Assign Leave form did not load");
     }
 }

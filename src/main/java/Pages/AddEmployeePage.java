@@ -1,6 +1,7 @@
 package Pages;
 
 import Util.DataFactory;
+import Util.Validations;
 import Util.ElementsActions;
 import Util.Waits;
 import io.qameta.allure.Step;
@@ -9,6 +10,7 @@ import org.openqa.selenium.By;
 public class AddEmployeePage extends BasePage {
     private static final String PATH = "/web/index.php/pim/addEmployee";
 
+    //Locators
     private final By firstNameField = By.name("firstName");
     private final By middleNameField = By.name("middleName");
     private final By lastNameField = By.name("lastName");
@@ -16,6 +18,7 @@ public class AddEmployeePage extends BasePage {
     private final By saveButton = By.cssSelector("button[type='submit']");
     private final By formHeading = By.xpath("//h6[normalize-space()='Add Employee']");
 
+    //PageActions
     @Step("Open PIM > Add Employee")
     public AddEmployeePage open() {
         openPath(PATH);
@@ -23,10 +26,6 @@ public class AddEmployeePage extends BasePage {
         return this;
     }
 
-    public boolean isDisplayed() {
-        return ElementsActions.isDisplayed(driver, formHeading)
-                && ElementsActions.isDisplayed(driver, firstNameField);
-    }
 
     public String getPrefilledEmployeeId() {
         return ElementsActions.getValue(driver, employeeIdField);
@@ -91,5 +90,13 @@ public class AddEmployeePage extends BasePage {
 
     public boolean isStillOnAddEmployeePage() {
         return driver.getCurrentUrl().contains("addEmployee");
+    }
+
+    //PageAssertions
+    public void verifyAddEmployeePageLoaded() {
+        Validations.validateTrue(
+                ElementsActions.isDisplayed(driver, formHeading)
+                        && ElementsActions.isDisplayed(driver, firstNameField),
+                "Add Employee form did not load");
     }
 }

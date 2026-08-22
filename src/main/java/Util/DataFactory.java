@@ -1,6 +1,5 @@
 package Util;
 
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -8,11 +7,22 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class DataFactory {
+
+    //TestData
+    private static final String DATA_FILE = "data.json";
+    private static final String FIRST_NAME = Helper.getJsonValue(DATA_FILE, "firstName");
+    private static final String MIDDLE_NAME = Helper.getJsonValue(DATA_FILE, "middleName");
+    private static final String LAST_NAME_PREFIX = Helper.getJsonValue(DATA_FILE, "lastNamePrefix");
+    private static final String EMPLOYEE_ID_PREFIX = Helper.getJsonValue(DATA_FILE, "employeeIdPrefix");
+
+    //Uniqueness: every generated value carries this run's tag, so two runs never collide
+    private static final String RUN_TAG = String.valueOf(System.currentTimeMillis()).substring(7);
     private static final AtomicInteger COUNTER = new AtomicInteger(0);
 
-    private static final String RUN_TAG =
-            String.valueOf(System.currentTimeMillis()).substring(7);
-
+    /**
+     * OrangeHRM 5.9 renders and parses dates as yyyy-dd-MM -- year, DAY, month.
+     * Verified: the 2026 leave period is displayed as "2026-01-01 - 2026-31-12".
+     */
     public static final DateTimeFormatter APP_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-dd-MM");
 
     private DataFactory() {
@@ -24,22 +34,47 @@ public final class DataFactory {
 
     public static Employee newEmployee() {
         int sequence = COUNTER.incrementAndGet();
-        String lastName = "QA" + RUN_TAG + sequence;
-        return new Employee("Automation", "Test", lastName, "EMP" + RUN_TAG + sequence);
+        return new Employee(FIRST_NAME, MIDDLE_NAME,
+                LAST_NAME_PREFIX + RUN_TAG + sequence,
+                EMPLOYEE_ID_PREFIX + RUN_TAG + sequence);
     }
 
     public static String updatedFirstName() {
-        return "Updated" + COUNTER.incrementAndGet() + RUN_TAG;
+        return Helper.getJsonValue(DATA_FILE, "updatedFirstNamePrefix")
+                + COUNTER.incrementAndGet() + RUN_TAG;
     }
 
     public static String updatedEmployeeId() {
-        return "UPD" + RUN_TAG + COUNTER.incrementAndGet();
+        return Helper.getJsonValue(DATA_FILE, "updatedEmployeeIdPrefix")
+                + RUN_TAG + COUNTER.incrementAndGet();
     }
 
+    public static String negativeFirstName() {
+        return Helper.getJsonValue(DATA_FILE, "negativeFirstNamePrefix") + RUN_TAG;
+    }
+
+    public static String negativeLastName() {
+        return Helper.getJsonValue(DATA_FILE, "negativeLastNamePrefix") + RUN_TAG;
+    }
+
+    public static String overlongFirstName() {
+        return "A".repeat(Integer.parseInt(Helper.getJsonValue(DATA_FILE, "overlongFirstNameLength")));
+    }
+
+    public static String entitlementDays() {
+        return Helper.getJsonValue(DATA_FILE, "entitlementDays");
+    }
+
+    public static String invalidPassword() {
+        return Helper.getJsonValue(DATA_FILE, "invalidPassword");
+    }
+
+    //Dates are calculated at runtime, never hard-coded
     public static String formatForApp(LocalDate date) {
         return date.format(APP_DATE_FORMAT);
     }
 
+    /** Anchored to a Monday so the working-day count stays a stable 3. */
     public static LocalDate leaveStartDate() {
         return LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
     }

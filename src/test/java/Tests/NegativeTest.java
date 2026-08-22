@@ -4,7 +4,7 @@ import Pages.AddEmployeePage;
 import Pages.AssignLeavePage;
 import Pages.LoginPage;
 import Pages.PimEmployeeListPage;
-import Util.ConfigReader;
+import Util.Config;
 import Util.DataFactory;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
@@ -34,10 +34,10 @@ public class NegativeTest extends BaseTest {
     @Severity(SeverityLevel.CRITICAL)
     @Description("Example A: submit Add Employee with the required Last Name empty. Expect an inline "
             + "'Required' message, no navigation, and no employee created.")
-    public void cannotCreateEmployeeWithoutLastName() {
+    public void verifyEmployeeCannotBeCreatedWithoutLastName() {
         AddEmployeePage addEmployee = new AddEmployeePage().open();
 
-        String firstName = "Negative" + DataFactory.runTag();
+        String firstName = DataFactory.negativeFirstName();
         addEmployee.enterFirstName(firstName)
                 .enterLastName("")
                 .saveExpectingValidationError();
@@ -64,12 +64,12 @@ public class NegativeTest extends BaseTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("Example B: enter a first name beyond the field's 30-character limit and expect the "
             + "form to reject it rather than silently truncating or storing it.")
-    public void cannotCreateEmployeeWithOverlongFirstName() {
+    public void verifyEmployeeCannotBeCreatedWithOverlongFirstName() {
         AddEmployeePage addEmployee = new AddEmployeePage().open();
 
-        String overlongName = "A".repeat(60);
+        String overlongName = DataFactory.overlongFirstName();
         addEmployee.enterFirstName(overlongName)
-                .enterLastName("Overflow" + DataFactory.runTag())
+                .enterLastName(DataFactory.negativeLastName())
                 .saveExpectingValidationError();
 
         String error = addEmployee.getFieldErrorFor("Employee Full Name");
@@ -95,7 +95,7 @@ public class NegativeTest extends BaseTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("Example C: submit Assign Leave with To Date before From Date and expect the form "
             + "to refuse it.")
-    public void cannotAssignLeaveWithEndDateBeforeStartDate() {
+    public void verifyLeaveCannotBeAssignedWithEndDateBeforeStartDate() {
         AssignLeavePage assign = new AssignLeavePage().open();
 
         if (assign.isModuleForbidden()) {
@@ -128,11 +128,11 @@ public class NegativeTest extends BaseTest {
     @Severity(SeverityLevel.CRITICAL)
     @Description("An additional negative scenario: a wrong password is refused, the user stays on "
             + "the login page, and the message does not disclose which field was wrong.")
-    public void invalidCredentialsAreRejected() {
+    public void verifyInvalidCredentialsAreRejected() {
         new Pages.DashboardPage().logout();
 
         LoginPage login = new LoginPage().open()
-                .loginExpectingFailure(ConfigReader.username(), "definitely-not-the-password");
+                .loginExpectingFailure(Config.getInstance().getUsername(), DataFactory.invalidPassword());
 
         assertEquals(login.getAlertMessage(), "Invalid credentials",
                 "A clear rejection message should be displayed");

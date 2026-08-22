@@ -1,6 +1,6 @@
 package Tools;
 
-import Util.ConfigReader;
+import Util.Config;
 import Util.Drivers;
 import Util.Waits;
 import org.openqa.selenium.By;
@@ -11,10 +11,10 @@ public class LeaveRouteProbe {
         WebDriver driver = Drivers.setUpDriver();
         try {
             long t0 = System.currentTimeMillis();
-            driver.get(ConfigReader.baseUrl() + "/web/index.php/auth/login");
+            driver.get(Config.getInstance().getBaseUrl() + "/web/index.php/auth/login");
             Waits.waitForElementVisible(driver, By.name("username"));
-            driver.findElement(By.name("username")).sendKeys(ConfigReader.username());
-            driver.findElement(By.name("password")).sendKeys(ConfigReader.password());
+            driver.findElement(By.name("username")).sendKeys(Config.getInstance().getUsername());
+            driver.findElement(By.name("password")).sendKeys(Config.getInstance().getPassword());
             driver.findElement(By.cssSelector("button[type='submit']")).click();
             Waits.waitForUrlContains(driver, "dashboard");
             System.out.println("login took " + (System.currentTimeMillis() - t0) + "ms");
@@ -28,7 +28,7 @@ public class LeaveRouteProbe {
                 System.out.println("\n########## ATTEMPT " + attempt + " ##########");
                 for (String route : routes) {
                     long start = System.currentTimeMillis();
-                    driver.get(ConfigReader.baseUrl() + route);
+                    driver.get(Config.getInstance().getBaseUrl() + route);
                     long loaded = System.currentTimeMillis() - start;
                     Thread.sleep(4000);
                     String url = driver.getCurrentUrl();

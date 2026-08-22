@@ -1,6 +1,7 @@
 package Pages;
 
 import Util.ElementsActions;
+import Util.Validations;
 import Util.Waits;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
@@ -10,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class EmployeeDetailsPage extends BasePage {
+    //Locators
     private final By firstNameField = By.name("firstName");
     private final By middleNameField = By.name("middleName");
     private final By lastNameField = By.name("lastName");
@@ -22,6 +24,7 @@ public class EmployeeDetailsPage extends BasePage {
     private final By tabs = By.cssSelector(".orangehrm-tabs-item");
     private final By personalDetailsHeading = By.xpath("//h6[normalize-space()='Personal Details']");
 
+    //PageActions
     private String creationToastText = "";
     private boolean creationWasSuccessful = false;
 
@@ -36,13 +39,6 @@ public class EmployeeDetailsPage extends BasePage {
 
     public boolean wasCreationConfirmed() {
         return creationWasSuccessful;
-    }
-
-    @Step("Verify the employee record is displayed")
-    public boolean isDisplayed() {
-        return driver.getCurrentUrl().contains("viewPersonalDetails")
-                && ElementsActions.isDisplayed(driver, personalDetailsHeading)
-                && ElementsActions.isDisplayed(driver, firstNameField);
     }
 
     @Step("Wait for the employee record to finish loading")
@@ -131,5 +127,14 @@ public class EmployeeDetailsPage extends BasePage {
         Waits.waitForElementVisible(driver, firstNameField);
         Waits.waitForLoaderToDisappear(driver);
         return waitForRecordToLoad();
+    }
+
+    //PageAssertions
+    public void verifyEmployeeDetailsPageLoaded() {
+        Validations.validateTrue(
+                driver.getCurrentUrl().contains("viewPersonalDetails")
+                        && ElementsActions.isDisplayed(driver, personalDetailsHeading)
+                        && ElementsActions.isDisplayed(driver, firstNameField),
+                "Employee record did not load");
     }
 }

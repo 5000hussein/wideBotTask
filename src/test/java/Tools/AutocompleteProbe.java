@@ -1,6 +1,6 @@
 package Tools;
 
-import Util.ConfigReader;
+import Util.Config;
 import Util.Drivers;
 import Util.Waits;
 import org.openqa.selenium.By;
@@ -16,7 +16,7 @@ public class AutocompleteProbe {
         try {
             login();
 
-            driver.get(ConfigReader.baseUrl() + "/web/index.php/pim/viewEmployeeList");
+            driver.get(Config.getInstance().getBaseUrl() + "/web/index.php/pim/viewEmployeeList");
             Waits.waitForLoaderToDisappear(driver);
             Waits.waitForElementVisible(driver, By.cssSelector(".oxd-table-card"), 30);
             Thread.sleep(2000);
@@ -73,10 +73,10 @@ public class AutocompleteProbe {
     }
 
     private static void login() {
-        driver.get(ConfigReader.baseUrl() + "/web/index.php/auth/login");
+        driver.get(Config.getInstance().getBaseUrl() + "/web/index.php/auth/login");
         Waits.waitForElementVisible(driver, By.name("username"));
-        driver.findElement(By.name("username")).sendKeys(ConfigReader.username());
-        driver.findElement(By.name("password")).sendKeys(ConfigReader.password());
+        driver.findElement(By.name("username")).sendKeys(Config.getInstance().getUsername());
+        driver.findElement(By.name("password")).sendKeys(Config.getInstance().getPassword());
         driver.findElement(By.cssSelector("button[type='submit']")).click();
         Waits.waitForUrlContains(driver, "dashboard");
     }

@@ -1,6 +1,6 @@
 package Tools;
 
-import Util.ConfigReader;
+import Util.Config;
 import Util.Drivers;
 import Util.ElementsActions;
 import Util.Waits;
@@ -91,7 +91,7 @@ public class LocatorProbe {
     }
 
     private static void go(String path) {
-        driver.get(ConfigReader.baseUrl() + path);
+        driver.get(Config.getInstance().getBaseUrl() + path);
         Waits.waitForLoaderToDisappear(driver);
         sleep(1500);
     }
@@ -115,8 +115,8 @@ public class LocatorProbe {
     }
 
     private static void login() {
-        driver.findElement(By.name("username")).sendKeys(ConfigReader.username());
-        driver.findElement(By.name("password")).sendKeys(ConfigReader.password());
+        driver.findElement(By.name("username")).sendKeys(Config.getInstance().getUsername());
+        driver.findElement(By.name("password")).sendKeys(Config.getInstance().getPassword());
         driver.findElement(By.cssSelector("button[type='submit']")).click();
         Waits.waitForUrlContains(driver, "dashboard");
         Waits.waitForLoaderToDisappear(driver);

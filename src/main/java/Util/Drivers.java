@@ -23,7 +23,7 @@ public final class Drivers {
             default -> new ChromeDriver(chromeOptions(headless));
         };
 
-        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(ConfigReader.pageLoadTimeout()));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(Config.getInstance().getPageLoadTimeout()));
 
         if (!headless) {
             driver.manage().window().maximize();
@@ -34,7 +34,7 @@ public final class Drivers {
     }
 
     public static WebDriver setUpDriver() {
-        return setUpDriver(ConfigReader.browser(), ConfigReader.headless());
+        return setUpDriver(Config.getInstance().getBrowser(), Config.getInstance().isHeadless());
     }
 
     public static WebDriver getDriver() {

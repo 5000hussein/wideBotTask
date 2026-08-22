@@ -6,10 +6,12 @@ import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 
 public class DashboardPage extends BasePage {
+    //Locators
     private final By dashboardGrid = By.cssSelector(".orangehrm-dashboard-grid");
     private final By dashboardWidget = By.cssSelector(".orangehrm-dashboard-widget");
     private final By logoutMenuItem = By.xpath("//a[normalize-space()='Logout']");
 
+    //PageActions
     @Step("Verify the dashboard has loaded")
     public boolean isDashboardDisplayed() {
         return Waits.waitForUrlContains(driver, "dashboard/index")
