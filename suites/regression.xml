@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Regression: every functional scenario, positive and negative.
+
+  Run with:  mvn test -DsuiteXmlFile=suites/regression.xml
+-->
+<suite name="OrangeHRM Regression" verbose="1" parallel="false" configfailurepolicy="continue">
+
+    <listeners>
+        <listener class-name="Listeners.TestListener"/>
+    </listeners>
+
+    <test name="Regression">
+        <groups>
+            <run>
+                <include name="regression"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="Tests.LoginTest"/>
+            <class name="Tests.EmployeeTest"/>
+            <class name="Tests.LeaveTest"/>
+            <class name="Tests.NegativeTest"/>
+        </classes>
+    </test>
+
+</suite>

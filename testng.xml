@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Default suite: the full functional scope, Steps 1 to 9.
+
+  Classes run in declaration order so the report reads as the assessment does.
+  Within a class, methods are chained with dependsOnMethods, so a broken
+  precondition SKIPS its dependants instead of failing them a second time.
+
+  Run with:  mvn test -DsuiteXmlFile=testng.xml
+-->
+<suite name="OrangeHRM Full Regression" verbose="1" parallel="false" configfailurepolicy="continue">
+
+    <parameter name="browser" value="chrome"/>
+
+    <listeners>
+        <listener class-name="Listeners.TestListener"/>
+    </listeners>
+
+    <test name="Authentication">
+        <classes>
+            <class name="Tests.LoginTest"/>
+        </classes>
+    </test>
+
+    <test name="Employee Lifecycle">
+        <classes>
+            <class name="Tests.EmployeeTest"/>
+        </classes>
+    </test>
+
+    <test name="Leave">
+        <classes>
+            <class name="Tests.LeaveTest"/>
+        </classes>
+    </test>
+
+    <test name="Negative Validation">
+        <classes>
+            <class name="Tests.NegativeTest"/>
+        </classes>
+    </test>
+
+</suite>

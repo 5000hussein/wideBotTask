@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<!--
+  Smoke: the shortest path that proves the application is worth testing further.
+  Login -> search -> create -> submit a leave request.
+
+  Run with:  mvn test -DsuiteXmlFile=suites/smoke.xml
+-->
+<suite name="OrangeHRM Smoke" verbose="1" parallel="false" configfailurepolicy="continue">
+
+    <listeners>
+        <listener class-name="Listeners.TestListener"/>
+    </listeners>
+
+    <test name="Smoke">
+        <groups>
+            <run>
+                <include name="smoke"/>
+            </run>
+        </groups>
+        <classes>
+            <class name="Tests.LoginTest"/>
+            <class name="Tests.EmployeeTest"/>
+            <class name="Tests.LeaveTest"/>
+        </classes>
+    </test>
+
+</suite>
