@@ -5,13 +5,28 @@ and leave lifecycle, plus the manual testing deliverables.
 
 **Application under test:** https://opensource-demo.orangehrmlive.com (OrangeHRM OS 5.9)
 
-| Deliverable | Location |
+## 📁 Deliverables — start here
+
+| # | Deliverable | Where |
+|---|---|---|
+| 1 | **Automation framework** | [`src/`](src/) · [`pom.xml`](pom.xml) · [`testng.xml`](testng.xml) · [`suites/`](suites/) |
+| 2 | **README** (this file) | [How to execute tests](#how-to-execute-tests) · [Configuration](#configuration) · [Test-data strategy](#test-data-strategy-and-cleanup) |
+| 3 | **Automated tests** — 19 tests, Steps 1–9 | [`src/test/java/Tests/`](src/test/java/Tests/) · [coverage matrix](#scenario-coverage) |
+| 4 | **Screenshots** — 18 checkpoints | [`screenshots/`](screenshots/) |
+| 5 | **Test report** | **[Live Allure report ↗](https://5000hussein.github.io/wideBotTask/report/)** · source in [`docs/report/`](docs/report/) |
+
+### 📝 Manual Testing Assessment
+
+| Part | Where |
 |---|---|
-| Automation framework | `src/`, `testng.xml`, `suites/` |
-| Manual test design & analysis | [`docs/manual-testing.md`](docs/manual-testing.md) |
-| Bug reports | [`docs/bug-report.md`](docs/bug-report.md) |
-| Screenshots | `screenshots/` |
-| Example execution report | `docs/report/` (see [Reporting](#reporting)) |
+| **1. User story review** — questions, ambiguities, missing requirements, assumptions, risks | **[`docs/manual-testing.md`](docs/manual-testing.md#1-what-i-would-raise-before-testing-starts)** |
+| **2. Test coverage design** — partitions, boundary analysis, techniques | [`docs/manual-testing.md` §2](docs/manual-testing.md#2-test-coverage-design) |
+| **3. Test cases** — 50+ cases across happy path, calculation, state, negative, cross-cutting | [`docs/manual-testing.md` §3](docs/manual-testing.md#3-test-cases) |
+| **4. Exploratory findings** — 6 real issues found in the live app | [`docs/manual-testing.md` §4](docs/manual-testing.md#4-what-exploratory-testing-actually-found) |
+| **5. Bug report** — the leave-balance defect, plus one I found myself | **[`docs/bug-report.md`](docs/bug-report.md)** |
+
+> **Latest full run: 19 tests · 0 failures · 0 skipped** — executed live against the demo
+> environment. See [Findings](#findings-from-building-this-suite) for the defects this surfaced.
 
 ---
 
@@ -210,6 +225,35 @@ mvn test -Dbrowser=edge -Dheadless=false -Dtest=LoginTest
 detail, and the screenshot evidence for both checkpoints and failures. Tests carry
 `@Epic` / `@Feature` / `@Story` / `@Severity`, and page-object actions carry `@Step`, so the
 report reads as a narrative rather than a list of method names.
+
+### 📊 View the example report
+
+A real report from a full green run (**19 tests, 0 failures, 0 skipped**) is committed to
+[`docs/report/`](docs/report/).
+
+> ### ➡️ **[Open the live Allure report](https://5000hussein.github.io/wideBotTask/report/)**
+
+**Please use the link above rather than opening the files directly.** The Allure report is a
+single-page app that loads its results over XHR from `data/*.json`, which means:
+
+| How you open it | Result |
+|---|---|
+| The GitHub Pages link above | ✅ Works — served over HTTP |
+| Clicking `docs/report/index.html` on github.com | ❌ Shows the raw HTML source, not the report |
+| Double-clicking `index.html` from disk | ❌ Renders **blank** — Chrome blocks the XHRs on `file://` |
+| `mvn allure:serve` locally | ✅ Works — starts a local web server |
+
+<details>
+<summary>Enabling the GitHub Pages link (one-time repo setting)</summary>
+
+**Settings → Pages → Build and deployment → Source: _Deploy from a branch_ →
+Branch: `main`, folder: `/docs` → Save.**
+
+The report is then live at `https://5000hussein.github.io/wideBotTask/report/` after about a
+minute. Serving from `/docs` also publishes the Markdown deliverables alongside it.
+</details>
+
+### Generating it yourself
 
 ```bash
 # 1. run the tests (results land in target/allure-results)
