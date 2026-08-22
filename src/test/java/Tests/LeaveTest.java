@@ -30,12 +30,12 @@ import static org.testng.Assert.assertTrue;
 /**
  * Step 8 -- Leave request.
  *
- * Route note. Leave &gt; Apply cannot be used on this environment: the signed-in
+ * Route note. Leave → Apply cannot be used on this environment: the signed-in
  * Admin holds no leave entitlement, so that screen renders "No Leave Types with
  * Leave Balance" instead of a form -- {@link #applyLeaveScreenMatchesEntitlementState()}
  * asserts the screen is correct for whichever state it is in, rather than
  * leaving it as an unexplained gap. The suite therefore creates the request
- * through Leave &gt; Assign Leave, the administrator's equivalent flow, against a
+ * through Leave → Assign Leave, the administrator's equivalent flow, against a
  * dedicated employee it creates and entitles itself. That keeps the scenario
  * self-contained instead of depending on whatever entitlements the shared demo
  * data happens to hold.

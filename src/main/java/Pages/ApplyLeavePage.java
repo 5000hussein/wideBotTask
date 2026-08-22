@@ -6,7 +6,7 @@ import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 
 /**
- * Leave &gt; Apply -- the employee-facing self-service form.
+ * Leave → Apply -- the employee-facing self-service form.
  *
  * On the public demo the signed-in Admin holds no leave entitlement, so this
  * screen renders the message "No Leave Types with Leave Balance" instead of a

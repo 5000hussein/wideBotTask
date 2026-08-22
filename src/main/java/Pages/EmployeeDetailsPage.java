@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * PIM &gt; Employee record, Personal Details tab.
+ * PIM → Employee record, Personal Details tab.
  *
  * The screen renders TWO oxd forms -- Personal Details and Custom Fields -- each
  * with its own type=submit button. Every action here is therefore scoped to the

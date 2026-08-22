@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** Leave &gt; Leave List -- used to prove a submitted leave request can be found again. */
+/** Leave → Leave List -- used to prove a submitted leave request can be found again. */
 public class LeaveListPage extends BasePage {
 
     private static final String PATH = "/web/index.php/leave/viewLeaveList";

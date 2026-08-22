@@ -13,7 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * PIM &gt; Employee List.
+ * PIM → Employee List.
  *
  * Rows are addressed by content, never by index. Every lookup goes through
  * {@link #findRowByLastName(String)}, which scans the rendered rows for a

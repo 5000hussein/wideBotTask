@@ -9,10 +9,10 @@ import org.openqa.selenium.By;
 import java.time.LocalDate;
 
 /**
- * Leave &gt; Assign Leave.
+ * Leave → Assign Leave.
  *
  * This is the leave-creation path the suite uses, and the choice is deliberate.
- * Leave &gt; Apply is unusable for the Admin account on the demo environment --
+ * Leave → Apply is unusable for the Admin account on the demo environment --
  * it renders "No Leave Types with Leave Balance" because the account holds no
  * entitlement (see ApplyLeavePage, which asserts exactly that). Assign Leave is
  * the equivalent flow available to an administrator.

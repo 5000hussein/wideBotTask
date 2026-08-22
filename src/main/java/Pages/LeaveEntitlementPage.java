@@ -6,7 +6,7 @@ import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 
 /**
- * Leave &gt; Entitlements &gt; Add Entitlements.
+ * Leave → Entitlements → Add Entitlements.
  *
  * A newly created employee has a zero balance for every leave type, and
  * OrangeHRM refuses to assign leave against a zero balance without an override.
