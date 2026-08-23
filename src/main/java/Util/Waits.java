@@ -30,10 +30,6 @@ public final class Waits {
         return webDriverWait;
     }
 
-    public static WebElement waitForElementPresent(WebDriver driver, By locator) {
-        return wait(driver).until(ExpectedConditions.presenceOfElementLocated(locator));
-    }
-
     public static WebElement waitForElementVisible(WebDriver driver, By locator) {
         return wait(driver).until(ExpectedConditions.visibilityOfElementLocated(locator));
     }

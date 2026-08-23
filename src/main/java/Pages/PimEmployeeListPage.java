@@ -31,7 +31,9 @@ public class PimEmployeeListPage extends BasePage {
     private final By tableCard = By.cssSelector(".oxd-table-card");
     private final By tableCell = By.cssSelector(".oxd-table-cell");
     private final By recordsFoundText = By.xpath("//span[contains(@class,'oxd-text--span')][contains(.,'Record')]");
-    private final By noRecordsToast = By.xpath("//div[contains(@class,'oxd-toast')][contains(.,'No Records Found')]");
+    private final By noRecordsFound = By.xpath(
+            "//div[contains(@class,'oxd-toast')][contains(.,'No Records Found')]"
+                    + " | //span[contains(normalize-space(),'No Records Found')]");
 
     private static final int COL_ID = 1;
     private static final int COL_FIRST_MIDDLE_NAME = 2;
@@ -39,7 +41,9 @@ public class PimEmployeeListPage extends BasePage {
     private static final int COL_JOB_TITLE = 4;
     private static final int COL_EMPLOYMENT_STATUS = 5;
     private static final int COL_SUB_UNIT = 6;
-    private static final int COL_SUPERVISOR = 7;
+
+    //A complete row carries every column through Supervisor
+    private static final int MIN_ROW_CELLS = 8;
 
     //PageActions
     @Step("Open PIM > Employee List")
@@ -90,14 +94,12 @@ public class PimEmployeeListPage extends BasePage {
     public void clickSearch() {
         ElementsActions.dismissToast(driver);
         ElementsActions.clickElement(driver, searchButton);
-        Waits.waitForLoaderToDisappear(driver);
         waitForResultsToSettle();
     }
 
     @Step("Reset the filters")
     public void clickReset() {
         ElementsActions.clickElement(driver, resetButton);
-        Waits.waitForLoaderToDisappear(driver);
         waitForResultsToSettle();
     }
 
@@ -109,16 +111,14 @@ public class PimEmployeeListPage extends BasePage {
                     return true;
                 }
                 return d.findElements(tableCard).stream()
-                        .anyMatch(card -> card.findElements(tableCell).size() > COL_SUPERVISOR);
+                        .anyMatch(card -> card.findElements(tableCell).size() >= MIN_ROW_CELLS);
             });
         } catch (org.openqa.selenium.TimeoutException ignored) {
         }
     }
 
     private boolean isNoResultsIndicated(org.openqa.selenium.WebDriver d) {
-        return d.findElements(noRecordsToast).stream().anyMatch(WebElement::isDisplayed)
-                || d.findElements(By.xpath("//span[contains(normalize-space(),'No Records Found')]"))
-                .stream().anyMatch(WebElement::isDisplayed);
+        return d.findElements(noRecordsFound).stream().anyMatch(WebElement::isDisplayed);
     }
 
     public int getRecordCount() {
@@ -142,7 +142,7 @@ public class PimEmployeeListPage extends BasePage {
             List<EmployeeRow> rows = new ArrayList<>();
             for (WebElement card : d.findElements(tableCard)) {
                 List<WebElement> cells = card.findElements(tableCell);
-                if (cells.size() <= COL_SUPERVISOR) {
+                if (cells.size() < MIN_ROW_CELLS) {
                     continue;
                 }
                 rows.add(new EmployeeRow(
@@ -151,8 +151,7 @@ public class PimEmployeeListPage extends BasePage {
                         text(cells, COL_LAST_NAME),
                         text(cells, COL_JOB_TITLE),
                         text(cells, COL_EMPLOYMENT_STATUS),
-                        text(cells, COL_SUB_UNIT),
-                        text(cells, COL_SUPERVISOR)));
+                        text(cells, COL_SUB_UNIT)));
             }
             return rows;
         });
@@ -201,7 +200,7 @@ public class PimEmployeeListPage extends BasePage {
     }
 
     public record EmployeeRow(String id, String firstAndMiddleName, String lastName,
-                              String jobTitle, String employmentStatus, String subUnit, String supervisor) {
+                              String jobTitle, String employmentStatus, String subUnit) {
         public String fullName() {
             return (firstAndMiddleName + " " + lastName).trim();
         }

@@ -6,8 +6,6 @@ import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
-import java.time.Duration;
-
 public class TestListener implements ITestListener {
     @Override
     public void onTestStart(ITestResult result) {
@@ -54,7 +52,7 @@ public class TestListener implements ITestListener {
 
     private void attachDuration(ITestResult result) {
         long millis = result.getEndMillis() - result.getStartMillis();
-        Allure.parameter("Duration", Duration.ofMillis(millis).toMillis() + " ms");
+        Allure.parameter("Duration", millis + " ms");
     }
 
     private String describe(ITestResult result) {

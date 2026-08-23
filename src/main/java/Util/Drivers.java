@@ -33,10 +33,6 @@ public final class Drivers {
         return driver;
     }
 
-    public static WebDriver setUpDriver() {
-        return setUpDriver(Config.getInstance().getBrowser(), Config.getInstance().isHeadless());
-    }
-
     public static WebDriver getDriver() {
         WebDriver driver = DRIVER.get();
         if (driver == null) {

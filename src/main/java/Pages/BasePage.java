@@ -14,10 +14,6 @@ public abstract class BasePage {
     protected static final By BREADCRUMB_MODULE = By.cssSelector(".oxd-topbar-header-breadcrumb-module");
     protected static final By USER_DROPDOWN_NAME = By.cssSelector(".oxd-userdropdown-name");
     protected static final By USER_DROPDOWN_TAB = By.cssSelector(".oxd-userdropdown-tab");
-    protected static final By SIDE_MENU_ITEM = By.cssSelector(".oxd-main-menu-item");
-    protected static final By TOAST = By.cssSelector(".oxd-toast");
-    protected static final By TOAST_TITLE = By.cssSelector(".oxd-toast .oxd-text--toast-title");
-    protected static final By TOAST_MESSAGE = By.cssSelector(".oxd-toast .oxd-text--toast-message");
 
     protected BasePage() {
         this.driver = Drivers.getDriver();

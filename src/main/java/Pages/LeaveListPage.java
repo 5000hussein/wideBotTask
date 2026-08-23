@@ -30,10 +30,8 @@ public class LeaveListPage extends BasePage {
     private final By tableCard = By.cssSelector(".oxd-table-card");
     private final By tableCell = By.cssSelector(".oxd-table-cell");
 
-    private static final int COL_DATE = 1;
     private static final int COL_EMPLOYEE_NAME = 2;
     private static final int COL_LEAVE_TYPE = 3;
-    private static final int COL_BALANCE = 4;
     private static final int COL_NUMBER_OF_DAYS = 5;
     private static final int COL_STATUS = 6;
 
@@ -99,10 +97,8 @@ public class LeaveListPage extends BasePage {
                     continue;
                 }
                 rows.add(new LeaveRow(
-                        cells.get(COL_DATE).getText().trim(),
                         cells.get(COL_EMPLOYEE_NAME).getText().trim(),
                         cells.get(COL_LEAVE_TYPE).getText().trim(),
-                        cells.get(COL_BALANCE).getText().trim(),
                         cells.get(COL_NUMBER_OF_DAYS).getText().trim(),
                         cells.get(COL_STATUS).getText().trim()));
             }
@@ -133,7 +129,7 @@ public class LeaveListPage extends BasePage {
         return Optional.empty();
     }
 
-    public record LeaveRow(String date, String employeeName, String leaveType,
-                           String balance, String numberOfDays, String status) {
+    public record LeaveRow(String employeeName, String leaveType,
+                           String numberOfDays, String status) {
     }
 }

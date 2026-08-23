@@ -24,12 +24,8 @@ public final class ScreenshotUtil {
         if (!Drivers.hasDriver()) {
             return null;
         }
-        return capture(Drivers.getDriver(), name);
-    }
-
-    public static Path capture(WebDriver driver, String name) {
         try {
-            byte[] png = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+            byte[] png = ((TakesScreenshot) Drivers.getDriver()).getScreenshotAs(OutputType.BYTES);
 
             Allure.addAttachment(name, "image/png", new ByteArrayInputStream(png), ".png");
 
