@@ -1,6 +1,6 @@
 package Pages;
 
-import Util.DataFactory;
+import Util.Helper;
 import Util.Validations;
 import Util.ElementsActions;
 import Util.Waits;
@@ -52,12 +52,12 @@ public class AssignLeavePage extends BasePage {
 
     @Step("Set From Date to {date}")
     public void setFromDate(LocalDate date) {
-        ElementsActions.setDate(driver, fromDateField, DataFactory.formatForApp(date));
+        ElementsActions.setDate(driver, fromDateField, Helper.formatForApp(date));
     }
 
     @Step("Set To Date to {date}")
     public void setToDate(LocalDate date) {
-        ElementsActions.setDate(driver, toDateField, DataFactory.formatForApp(date));
+        ElementsActions.setDate(driver, toDateField, Helper.formatForApp(date));
     }
 
     public String getFromDateValue() {

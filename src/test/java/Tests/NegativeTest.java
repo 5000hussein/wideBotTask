@@ -5,7 +5,7 @@ import Pages.AssignLeavePage;
 import Pages.LoginPage;
 import Pages.PimEmployeeListPage;
 import Util.Config;
-import Util.DataFactory;
+import Util.Helper;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -38,7 +38,7 @@ public class NegativeTest extends BaseTest {
         AddEmployeePage addEmployee = new AddEmployeePage();
         addEmployee.open();
 
-        String firstName = DataFactory.negativeFirstName();
+        String firstName = Helper.getData("negativeFirstName");
         addEmployee.enterFirstName(firstName);
         addEmployee.enterLastName("");
         addEmployee.saveExpectingValidationError();
@@ -70,9 +70,9 @@ public class NegativeTest extends BaseTest {
         AddEmployeePage addEmployee = new AddEmployeePage();
         addEmployee.open();
 
-        String overlongName = DataFactory.overlongFirstName();
+        String overlongName = Helper.getData("overlongFirstName");
         addEmployee.enterFirstName(overlongName);
-        addEmployee.enterLastName(DataFactory.negativeLastName());
+        addEmployee.enterLastName(Helper.getData("negativeLastName"));
         addEmployee.saveExpectingValidationError();
 
         String error = addEmployee.getFieldErrorFor("Employee Full Name");
@@ -108,8 +108,8 @@ public class NegativeTest extends BaseTest {
                     + "negative scenarios in this class are unaffected.");
         }
 
-        assign.setFromDate(DataFactory.leaveStartDate());
-        assign.setToDate(DataFactory.invalidEndDate());
+        assign.setFromDate(Helper.leaveStartDate());
+        assign.setToDate(Helper.invalidEndDate());
 
         String error = assign.getFieldErrorFor("To Date");
         if (error.isBlank()) {
@@ -137,7 +137,7 @@ public class NegativeTest extends BaseTest {
 
         LoginPage login = new LoginPage();
         login.open();
-        login.loginExpectingFailure(Config.getInstance().getUsername(), DataFactory.invalidPassword());
+        login.loginExpectingFailure(Config.getInstance().getUsername(), Helper.getData("invalidPassword"));
 
         assertEquals(login.getAlertMessage(), "Invalid credentials",
                 "A clear rejection message should be displayed");

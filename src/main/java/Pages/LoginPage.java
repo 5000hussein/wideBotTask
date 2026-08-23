@@ -67,18 +67,17 @@ public class LoginPage extends BasePage {
     }
 
     @Step("Log in with the configured credentials")
-    public DashboardPage loginWithValidCredentials() {
-        return loginAs(Config.getInstance().getUsername(), Config.getInstance().getPassword());
+    public void loginWithValidCredentials() {
+        loginAs(Config.getInstance().getUsername(), Config.getInstance().getPassword());
     }
 
     @Step("Log in as {username}")
-    public DashboardPage loginAs(String username, String password) {
+    public void loginAs(String username, String password) {
         enterUsername(username);
         enterPassword(password);
         submit();
         Waits.waitForUrlContains(driver, "dashboard");
         Waits.waitForLoaderToDisappear(driver);
-        return new DashboardPage();
     }
 
     @Step("Attempt login as {username} expecting rejection")

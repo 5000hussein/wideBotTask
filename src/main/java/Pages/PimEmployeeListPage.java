@@ -171,16 +171,13 @@ public class PimEmployeeListPage extends BasePage {
     }
 
     @Step("Open the employee record for last name {lastName}")
-    public EmployeeDetailsPage openEmployeeByLastName(String lastName) {
+    public void openEmployeeByLastName(String lastName) {
         WebElement row = rowElementByLastName(lastName);
 
         WebElement nameCell = row.findElements(tableCell).get(COL_LAST_NAME);
         ElementsActions.clickElement(driver, nameCell);
         Waits.waitForUrlContains(driver, "viewPersonalDetails");
         Waits.waitForLoaderToDisappear(driver);
-        EmployeeDetailsPage details = new EmployeeDetailsPage();
-        details.waitForRecordToLoad();
-        return details;
     }
 
     @Step("Delete the employee with last name {lastName}")

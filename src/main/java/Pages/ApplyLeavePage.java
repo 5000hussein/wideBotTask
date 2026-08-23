@@ -1,6 +1,5 @@
 package Pages;
 
-import Util.ElementsActions;
 import Util.Waits;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
@@ -13,6 +12,11 @@ public class ApplyLeavePage extends BasePage {
             "//*[contains(normalize-space(),'No Leave Types with Leave Balance')]");
     private final By leaveTypeDropdown = dropdownByLabel("Leave Type");
     private final By applyButton = By.cssSelector("button[type='submit']");
+    private final By screenResolved = By.xpath(
+            "//*[contains(normalize-space(),'No Leave Types with Leave Balance')]"
+                    + " | //div[contains(@class,'oxd-input-group')]"
+                    + "[.//label[normalize-space()='Leave Type']]"
+                    + "//div[contains(@class,'oxd-select-text')]");
 
     //PageActions
     @Step("Open Leave > Apply")
@@ -30,28 +34,8 @@ public class ApplyLeavePage extends BasePage {
                 && Waits.isElementVisible(driver, applyButton, 5);
     }
 
-    public enum State {
-        NO_BALANCE,
-
-        FORM_AVAILABLE,
-
-        UNKNOWN
-    }
-
-    @Step("Determine the state of the Apply Leave screen")
-    public State getState() {
-        for (int attempt = 1; attempt <= 3; attempt++) {
-            if (isNoLeaveBalanceMessageDisplayed()) {
-                return State.NO_BALANCE;
-            }
-            if (isApplyFormAvailable()) {
-                return State.FORM_AVAILABLE;
-            }
-            System.out.println("Apply Leave screen not resolved on attempt " + attempt + "; reloading.");
-            if (attempt < 3) {
-                open();
-            }
-        }
-        return State.UNKNOWN;
+    @Step("Wait until the Apply Leave screen shows the form or the no-balance message")
+    public boolean waitForScreenToResolve() {
+        return Waits.isElementVisible(driver, screenResolved, 15);
     }
 }

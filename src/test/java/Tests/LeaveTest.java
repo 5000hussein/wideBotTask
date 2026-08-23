@@ -6,7 +6,7 @@ import Pages.AssignLeavePage;
 import Pages.LeaveEntitlementPage;
 import Pages.LeaveListPage;
 import Util.Config;
-import Util.DataFactory;
+import Util.Helper;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -24,13 +24,16 @@ import java.util.Optional;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 
 @Epic("OrangeHRM")
 @Feature("Leave")
 public class LeaveTest extends BaseTest {
-    private DataFactory.Employee leaveEmployee;
+    private final String leaveFirstName = Helper.getData("leaveFirstName");
+    private final String leaveMiddleName = Helper.getData("leaveMiddleName");
+    private final String leaveLastName = Helper.getData("leaveLastName");
+    private final String leaveEmployeeId = Helper.getData("leaveEmployeeId");
+    private final String leaveFullName = leaveFirstName + " " + leaveMiddleName + " " + leaveLastName;
     private String leaveType;
     private LocalDate fromDate;
     private LocalDate toDate;
@@ -38,9 +41,8 @@ public class LeaveTest extends BaseTest {
     @BeforeClass(alwaysRun = true, dependsOnMethods = "setUp")
     public void signIn() {
         loginToDashboard();
-        leaveEmployee = DataFactory.newEmployee();
-        fromDate = DataFactory.leaveStartDate();
-        toDate = DataFactory.leaveEndDate();
+        fromDate = Helper.leaveStartDate();
+        toDate = Helper.leaveEndDate();
 
         new ApplyLeavePage().open();
         if (new ApplyLeavePage().isModuleForbidden()) {
@@ -63,14 +65,10 @@ public class LeaveTest extends BaseTest {
     public void verifyApplyLeaveScreenMatchesEntitlementState() {
         ApplyLeavePage apply = new ApplyLeavePage();
         apply.open();
-        ApplyLeavePage.State state = apply.getState();
-
-        assertNotEquals(state, ApplyLeavePage.State.UNKNOWN,
+        assertTrue(apply.waitForScreenToResolve(),
                 "Apply Leave should render either the request form or the no-balance message");
 
-        if (state == ApplyLeavePage.State.NO_BALANCE) {
-            assertTrue(apply.isNoLeaveBalanceMessageDisplayed(),
-                    "Apply Leave should explain that the account has no leave types with a balance");
+        if (apply.isNoLeaveBalanceMessageDisplayed()) {
             assertFalse(apply.isApplyFormAvailable(),
                     "The request form must not be offered when there is no balance to spend");
             System.out.println("Apply Leave: no entitlement for this account, as expected on the demo.");
@@ -92,13 +90,14 @@ public class LeaveTest extends BaseTest {
     public void verifyUserCanCreateEmployeeWithLeaveEntitlement() {
         AddEmployeePage addEmployee = new AddEmployeePage();
         addEmployee.open();
-        addEmployee.saveAndOpenRecord(leaveEmployee);
-        registerForCleanup(leaveEmployee);
+        addEmployee.fillForm(leaveFirstName, leaveMiddleName, leaveLastName, leaveEmployeeId);
+        addEmployee.save();
+        registerForCleanup(leaveLastName);
 
         LeaveEntitlementPage entitlement = new LeaveEntitlementPage();
         entitlement.open();
 
-        assertTrue(entitlement.selectEmployee(leaveEmployee.fullName()),
+        assertTrue(entitlement.selectEmployee(leaveFullName),
                 "The newly created employee should be selectable for an entitlement");
 
         List<String> availableTypes = entitlement.getAvailableLeaveTypes();
@@ -107,7 +106,7 @@ public class LeaveTest extends BaseTest {
         System.out.println("Using leave type: " + leaveType);
 
         entitlement.selectLeaveType(leaveType);
-        entitlement.setEntitlement(DataFactory.entitlementDays());
+        entitlement.setEntitlement(Helper.getData("entitlementDays"));
         entitlement.save();
 
         assertTrue(entitlement.wasLastActionSuccessful(),
@@ -128,7 +127,7 @@ public class LeaveTest extends BaseTest {
         assign.open();
         assign.verifyAssignLeavePageLoaded();
 
-        assertTrue(assign.selectEmployee(leaveEmployee.fullName()),
+        assertTrue(assign.selectEmployee(leaveFullName),
                 "The entitled employee should be selectable on Assign Leave");
         assign.selectLeaveType(leaveType);
 
@@ -137,11 +136,11 @@ public class LeaveTest extends BaseTest {
 
         assign.setFromDate(fromDate);
         assign.setToDate(toDate);
-        assign.setComment("Submitted by automated regression run " + DataFactory.runTag());
+        assign.setComment(Helper.getData("leaveComment"));
 
-        assertEquals(assign.getFromDateValue(), DataFactory.formatForApp(fromDate),
+        assertEquals(assign.getFromDateValue(), Helper.formatForApp(fromDate),
                 "From Date should hold the calculated start date");
-        assertEquals(assign.getToDateValue(), DataFactory.formatForApp(toDate),
+        assertEquals(assign.getToDateValue(), Helper.formatForApp(toDate),
                 "To Date should hold the calculated end date");
 
         assign.clickAssign();
@@ -165,19 +164,19 @@ public class LeaveTest extends BaseTest {
 
         leaveList.includeStatus("Scheduled");
         leaveList.setDateRange(fromDate, toDate);
-        assertTrue(leaveList.setEmployeeFilter(leaveEmployee.fullName()),
+        assertTrue(leaveList.setEmployeeFilter(leaveFullName),
                 "The employee should be selectable on the Leave List filter");
         leaveList.clickSearch();
 
-        Optional<LeaveListPage.LeaveRow> row = leaveList.findRowByEmployeeRetrying(leaveEmployee.lastName());
+        Optional<LeaveListPage.LeaveRow> row = leaveList.findRowByEmployeeRetrying(leaveLastName);
         assertTrue(row.isPresent(),
-                "The submitted leave request should be findable for " + leaveEmployee.fullName());
+                "The submitted leave request should be findable for " + leaveFullName);
 
         LeaveListPage.LeaveRow leave = row.get();
         assertTrue(leave.leaveType().contains(leaveType),
                 "The stored leave type should be '" + leaveType + "' but was '" + leave.leaveType() + "'");
-        assertEquals(leave.numberOfDays(), String.valueOf(DataFactory.expectedLeaveDays()) + ".00",
-                "A Monday-to-Wednesday request should be " + DataFactory.expectedLeaveDays() + " days");
+        assertEquals(leave.numberOfDays(), Helper.getData("expectedLeaveDays") + ".00",
+                "A Monday-to-Wednesday request should be " + Helper.getData("expectedLeaveDays") + " days");
         assertFalse(leave.status().isBlank(), "The request should carry a status");
 
         System.out.println("Found leave: " + leave);

@@ -4,7 +4,7 @@ import Pages.AddEmployeePage;
 import Pages.EmployeeDetailsPage;
 import Pages.PimEmployeeListPage;
 import Util.Config;
-import Util.DataFactory;
+import Util.Helper;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -27,8 +27,17 @@ import static org.testng.Assert.assertTrue;
 @Epic("OrangeHRM")
 @Feature("PIM - Employee Management")
 public class EmployeeTest extends BaseTest {
-    private DataFactory.Employee employee;
-    private DataFactory.Employee editedEmployee;
+    private final String firstName = Helper.getData("firstName");
+    private final String middleName = Helper.getData("middleName");
+    private final String lastName = Helper.getData("lastName");
+    private final String employeeId = Helper.getData("employeeId");
+    private final String fullName = firstName + " " + middleName + " " + lastName;
+    private final String firstAndMiddleName = firstName + " " + middleName;
+
+    private final String updatedFirstName = Helper.getData("updatedFirstName");
+    private final String updatedEmployeeId = Helper.getData("updatedEmployeeId");
+    private final String updatedFullName = updatedFirstName + " " + middleName + " " + lastName;
+
     private String empNumber;
 
     private static final int RESET_COUNT_TOLERANCE = 25;
@@ -36,7 +45,6 @@ public class EmployeeTest extends BaseTest {
     @BeforeClass(alwaysRun = true, dependsOnMethods = "setUp")
     public void signIn() {
         loginToDashboard();
-        employee = DataFactory.newEmployee();
     }
 
     @Test(priority = 1, groups = {"smoke", "regression"},
@@ -115,19 +123,23 @@ public class EmployeeTest extends BaseTest {
         String prefilledId = addEmployee.getPrefilledEmployeeId();
         assertFalse(prefilledId.isBlank(), "OrangeHRM should pre-populate a suggested Employee Id");
 
-        EmployeeDetailsPage details = addEmployee.saveAndOpenRecord(employee);
-        registerForCleanup(employee);
+        addEmployee.fillForm(firstName, middleName, lastName, employeeId);
+        addEmployee.save();
+        registerForCleanup(lastName);
 
-        assertTrue(details.wasCreationConfirmed(),
+        assertTrue(addEmployee.wasSaveSuccessful(),
                 "A success notification should be displayed on save");
-        assertTrue(details.getCreationToastText().toLowerCase().contains("success"),
+        assertTrue(addEmployee.getSaveToastText().toLowerCase().contains("success"),
                 "Notification should confirm success but was: '"
-                        + details.getCreationToastText() + "'");
+                        + addEmployee.getSaveToastText() + "'");
+
+        EmployeeDetailsPage details = new EmployeeDetailsPage();
+        details.waitForRecordToLoad();
 
         empNumber = details.getEmpNumberFromUrl();
         assertFalse(empNumber.isBlank(),
                 "The created record should have a server-assigned employee number in its URL");
-        assertEquals(details.getEmployeeId(), employee.employeeId(),
+        assertEquals(details.getEmployeeId(), employeeId,
                 "The Employee Id we supplied should be stored on the record");
 
         checkpoint("04-employee-created");
@@ -144,17 +156,17 @@ public class EmployeeTest extends BaseTest {
         PimEmployeeListPage list = new PimEmployeeListPage();
         list.open();
 
-        assertTrue(list.setEmployeeNameFilter(employee.fullName()),
+        assertTrue(list.setEmployeeNameFilter(fullName),
                 "The new employee should be offered by the name autocomplete");
         list.clickSearch();
 
         assertEquals(list.getRecordCount(), 1,
                 "The generated name is unique, so exactly one record should match");
 
-        Optional<PimEmployeeListPage.EmployeeRow> row = list.findRowByLastName(employee.lastName());
+        Optional<PimEmployeeListPage.EmployeeRow> row = list.findRowByLastName(lastName);
         assertTrue(row.isPresent(), "The created employee should appear in the employee list");
-        assertEquals(row.get().id(), employee.employeeId(), "Employee Id should match what was entered");
-        assertEquals(row.get().firstAndMiddleName(), employee.firstAndMiddleName(),
+        assertEquals(row.get().id(), employeeId, "Employee Id should match what was entered");
+        assertEquals(row.get().firstAndMiddleName(), firstAndMiddleName,
                 "First (& middle) name should match what was entered");
 
         checkpoint("05-created-employee-in-list");
@@ -169,23 +181,26 @@ public class EmployeeTest extends BaseTest {
     public void verifyCreatedEmployeeRecordShowsCorrectDetails() {
         PimEmployeeListPage list = new PimEmployeeListPage();
         list.open();
-        list.setEmployeeNameFilter(employee.fullName());
+        list.setEmployeeNameFilter(fullName);
         list.clickSearch();
 
-        EmployeeDetailsPage details = list.openEmployeeByLastName(employee.lastName());
+        list.openEmployeeByLastName(lastName);
+
+        EmployeeDetailsPage details = new EmployeeDetailsPage();
+        details.waitForRecordToLoad();
 
         details.verifyEmployeeDetailsPageLoaded();
         assertEquals(details.getEmpNumberFromUrl(), empNumber,
                 "Opening from the list should reach the same record that creation returned");
 
-        assertEquals(details.getFirstName(), employee.firstName(), "First name should match");
-        assertEquals(details.getMiddleName(), employee.middleName(), "Middle name should match");
-        assertEquals(details.getLastName(), employee.lastName(), "Last name should match");
+        assertEquals(details.getFirstName(), firstName, "First name should match");
+        assertEquals(details.getMiddleName(), middleName, "Middle name should match");
+        assertEquals(details.getLastName(), lastName, "Last name should match");
 
-        assertEquals(details.getEmployeeId(), employee.employeeId(), "Employee Id should be populated");
+        assertEquals(details.getEmployeeId(), employeeId, "Employee Id should be populated");
 
         String banner = details.getDisplayedName();
-        assertTrue(banner.contains(employee.firstName()) && banner.contains(employee.lastName()),
+        assertTrue(banner.contains(firstName) && banner.contains(lastName),
                 "The record header should show the employee's name but was: '" + banner + "'");
 
         assertTrue(details.isTabAvailable("Job"), "The Job tab should be accessible");
@@ -206,17 +221,13 @@ public class EmployeeTest extends BaseTest {
         String originalFirstName = details.getFirstName();
         String originalEmployeeId = details.getEmployeeId();
 
-        editedEmployee = employee
-                .withFirstName(DataFactory.updatedFirstName())
-                .withEmployeeId(DataFactory.updatedEmployeeId());
-
-        assertNotEquals(editedEmployee.firstName(), originalFirstName,
+        assertNotEquals(updatedFirstName, originalFirstName,
                 "The edit must use a value different from the original");
-        assertNotEquals(editedEmployee.employeeId(), originalEmployeeId,
+        assertNotEquals(updatedEmployeeId, originalEmployeeId,
                 "The edit must use an employee id different from the original");
 
-        details.setFirstName(editedEmployee.firstName());
-        details.setEmployeeId(editedEmployee.employeeId());
+        details.setFirstName(updatedFirstName);
+        details.setEmployeeId(updatedEmployeeId);
         details.savePersonalDetails();
 
         assertTrue(details.wasLastActionSuccessful(), "A success notification should confirm the update");
@@ -225,9 +236,9 @@ public class EmployeeTest extends BaseTest {
 
         details.dismissToast();
 
-        assertEquals(details.getFirstName(), editedEmployee.firstName(),
+        assertEquals(details.getFirstName(), updatedFirstName,
                 "The updated first name should be visible after saving");
-        assertEquals(details.getEmployeeId(), editedEmployee.employeeId(),
+        assertEquals(details.getEmployeeId(), updatedEmployeeId,
                 "The updated employee id should be visible after saving");
 
         checkpoint("07-employee-updated");
@@ -242,11 +253,11 @@ public class EmployeeTest extends BaseTest {
         EmployeeDetailsPage details = openCreatedEmployeeRecord();
         details.reload();
 
-        assertEquals(details.getFirstName(), editedEmployee.firstName(),
+        assertEquals(details.getFirstName(), updatedFirstName,
                 "The updated first name should survive a refresh");
-        assertEquals(details.getEmployeeId(), editedEmployee.employeeId(),
+        assertEquals(details.getEmployeeId(), updatedEmployeeId,
                 "The updated employee id should survive a refresh");
-        assertNotEquals(details.getFirstName(), employee.firstName(),
+        assertNotEquals(details.getFirstName(), firstName,
                 "The record must not revert to its pre-edit first name");
 
         checkpoint("08-update-persisted-after-refresh");
@@ -262,21 +273,21 @@ public class EmployeeTest extends BaseTest {
         EmployeeDetailsPage details = openCreatedEmployeeRecord();
         details.navigateAwayAndReturn();
 
-        assertEquals(details.getFirstName(), editedEmployee.firstName(),
+        assertEquals(details.getFirstName(), updatedFirstName,
                 "The updated first name should still be present after navigating away and back");
-        assertEquals(details.getEmployeeId(), editedEmployee.employeeId(),
+        assertEquals(details.getEmployeeId(), updatedEmployeeId,
                 "The updated employee id should still be present after navigating away and back");
 
         PimEmployeeListPage list = new PimEmployeeListPage();
         list.open();
-        list.setEmployeeNameFilter(editedEmployee.fullName());
+        list.setEmployeeNameFilter(updatedFullName);
         list.clickSearch();
 
-        Optional<PimEmployeeListPage.EmployeeRow> row = list.findRowByLastName(editedEmployee.lastName());
+        Optional<PimEmployeeListPage.EmployeeRow> row = list.findRowByLastName(lastName);
         assertTrue(row.isPresent(), "The edited employee should still be findable in the employee list");
-        assertEquals(row.get().id(), editedEmployee.employeeId(),
+        assertEquals(row.get().id(), updatedEmployeeId,
                 "The employee list should report the updated employee id");
-        assertTrue(row.get().firstAndMiddleName().contains(editedEmployee.firstName()),
+        assertTrue(row.get().firstAndMiddleName().contains(updatedFirstName),
                 "The employee list should report the updated first name");
 
         checkpoint("09-update-persisted-after-navigation");

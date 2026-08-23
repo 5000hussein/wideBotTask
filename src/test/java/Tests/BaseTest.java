@@ -5,7 +5,6 @@ import Pages.DashboardPage;
 import Pages.LoginPage;
 import Pages.PimEmployeeListPage;
 import Util.Config;
-import Util.DataFactory;
 import Util.Drivers;
 import Util.ScreenshotUtil;
 import io.qameta.allure.Step;
@@ -25,7 +24,7 @@ public abstract class BaseTest {
     protected LoginPage loginPage;
     protected DashboardPage dashboardPage;
 
-    private final List<DataFactory.Employee> createdEmployees = new ArrayList<>();
+    private final List<String> createdLastNames = new ArrayList<>();
 
     @BeforeClass(alwaysRun = true)
     @Parameters({"browser"})
@@ -43,12 +42,14 @@ public abstract class BaseTest {
     protected DashboardPage loginToDashboard() {
         LoginPage login = new LoginPage();
         login.open();
-        dashboardPage = login.loginWithValidCredentials();
+        login.loginWithValidCredentials();
+
+        dashboardPage = new DashboardPage();
         return dashboardPage;
     }
 
-    protected void registerForCleanup(DataFactory.Employee employee) {
-        createdEmployees.add(employee);
+    protected void registerForCleanup(String lastName) {
+        createdLastNames.add(lastName);
     }
 
     @AfterClass(alwaysRun = true)
@@ -61,44 +62,44 @@ public abstract class BaseTest {
     }
 
     private void cleanUpCreatedEmployees() {
-        if (createdEmployees.isEmpty()) {
+        if (createdLastNames.isEmpty()) {
             return;
         }
         if (!Config.getInstance().isCleanupEnabled()) {
             System.out.println("Cleanup disabled (cleanup.enabled=false). Records left in place: "
-                    + createdEmployees.stream().map(DataFactory.Employee::lastName).toList());
+                    + createdLastNames);
             return;
         }
         if (!Drivers.hasDriver()) {
             System.err.println("No live session for cleanup; leftover records: "
-                    + createdEmployees.stream().map(DataFactory.Employee::lastName).toList());
+                    + createdLastNames);
             return;
         }
 
-        for (DataFactory.Employee employee : createdEmployees) {
+        for (String lastName : createdLastNames) {
             try {
                 PimEmployeeListPage list = new PimEmployeeListPage();
                 list.open();
 
-                if (!list.setEmployeeNameFilter(employee.lastName())) {
-                    System.out.println("Cleanup: '" + employee.lastName()
+                if (!list.setEmployeeNameFilter(lastName)) {
+                    System.out.println("Cleanup: '" + lastName
                             + "' no longer offered by search -- assuming already removed.");
                     continue;
                 }
                 list.clickSearch();
-                if (list.findRowByLastName(employee.lastName()).isEmpty()) {
+                if (list.findRowByLastName(lastName).isEmpty()) {
                     continue;
                 }
-                list.deleteEmployeeByLastName(employee.lastName());
-                System.out.println("Cleanup: deleted employee " + employee.fullName());
+                list.deleteEmployeeByLastName(lastName);
+                System.out.println("Cleanup: deleted employee " + lastName);
             } catch (RuntimeException e) {
-                System.err.println("Cleanup FAILED for " + employee.fullName()
+                System.err.println("Cleanup FAILED for " + lastName
                         + " (" + e.getClass().getSimpleName() + ": " + e.getMessage()
                         + "). This record must be removed manually.");
-                ScreenshotUtil.capture("cleanup-failed-" + employee.lastName());
+                ScreenshotUtil.capture("cleanup-failed-" + lastName);
             }
         }
-        createdEmployees.clear();
+        createdLastNames.clear();
     }
 
     protected void checkpoint(String name) {

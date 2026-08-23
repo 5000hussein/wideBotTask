@@ -1,6 +1,6 @@
 package Pages;
 
-import Util.DataFactory;
+import Util.Helper;
 import Util.ElementsActions;
 import Util.Waits;
 import io.qameta.allure.Step;
@@ -46,8 +46,8 @@ public class LeaveListPage extends BasePage {
 
     @Step("Filter leave from {from} to {to}")
     public void setDateRange(LocalDate from, LocalDate to) {
-        ElementsActions.setDate(driver, fromDateField, DataFactory.formatForApp(from));
-        ElementsActions.setDate(driver, toDateField, DataFactory.formatForApp(to));
+        ElementsActions.setDate(driver, fromDateField, Helper.formatForApp(from));
+        ElementsActions.setDate(driver, toDateField, Helper.formatForApp(to));
     }
 
     @Step("Include leave with status {status}")

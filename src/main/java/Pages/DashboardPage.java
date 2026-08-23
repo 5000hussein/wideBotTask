@@ -28,10 +28,9 @@ public class DashboardPage extends BasePage {
     }
 
     @Step("Log out")
-    public LoginPage logout() {
+    public void logout() {
         ElementsActions.clickElement(driver, USER_DROPDOWN_TAB);
         ElementsActions.clickElement(driver, logoutMenuItem);
         Waits.waitForUrlContains(driver, "auth/login");
-        return new LoginPage();
     }
 }

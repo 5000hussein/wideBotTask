@@ -25,22 +25,6 @@ public class EmployeeDetailsPage extends BasePage {
     private final By personalDetailsHeading = By.xpath("//h6[normalize-space()='Personal Details']");
 
     //PageActions
-    private String creationToastText = "";
-    private boolean creationWasSuccessful = false;
-
-    void setCreationToast(String toastText, boolean wasSuccessful) {
-        this.creationToastText = toastText;
-        this.creationWasSuccessful = wasSuccessful;
-    }
-
-    public String getCreationToastText() {
-        return creationToastText;
-    }
-
-    public boolean wasCreationConfirmed() {
-        return creationWasSuccessful;
-    }
-
     @Step("Wait for the employee record to finish loading")
     public void waitForRecordToLoad() {
         Waits.retryOnStale(driver, d -> {

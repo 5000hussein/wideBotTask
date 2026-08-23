@@ -47,7 +47,9 @@ public class LoginTest extends BaseTest {
     public void verifyUserCanLoginWithValidCredentials() {
         LoginPage login = new LoginPage();
         login.open();
-        DashboardPage dashboard = login.loginWithValidCredentials();
+        login.loginWithValidCredentials();
+
+        DashboardPage dashboard = new DashboardPage();
 
         assertTrue(dashboard.isDashboardDisplayed(),
                 "Dashboard should be displayed after a successful login");

@@ -1,6 +1,5 @@
 package Pages;
 
-import Util.DataFactory;
 import Util.Validations;
 import Util.ElementsActions;
 import Util.Waits;
@@ -17,6 +16,9 @@ public class AddEmployeePage extends BasePage {
     private final By employeeIdField = inputByLabel("Employee Id");
     private final By saveButton = By.cssSelector("button[type='submit']");
     private final By formHeading = By.xpath("//h6[normalize-space()='Add Employee']");
+
+    private String saveToastText = "";
+    private boolean saveWasSuccessful = false;
 
     //PageActions
     @Step("Open PIM > Add Employee")
@@ -50,30 +52,32 @@ public class AddEmployeePage extends BasePage {
         ElementsActions.clearAndEnterText(driver, employeeIdField, employeeId);
     }
 
-    @Step("Fill the form for {employee}")
-    public void fillForm(DataFactory.Employee employee) {
-        enterFirstName(employee.firstName());
-        enterMiddleName(employee.middleName());
-        enterLastName(employee.lastName());
-        enterEmployeeId(employee.employeeId());
+    @Step("Fill the form for {firstName} {middleName} {lastName}")
+    public void fillForm(String firstName, String middleName, String lastName, String employeeId) {
+        enterFirstName(firstName);
+        enterMiddleName(middleName);
+        enterLastName(lastName);
+        enterEmployeeId(employeeId);
     }
 
-    @Step("Save {employee} and open the created record")
-    public EmployeeDetailsPage saveAndOpenRecord(DataFactory.Employee employee) {
-        fillForm(employee);
+    @Step("Save the employee")
+    public void save() {
         ElementsActions.clickElement(driver, saveButton);
 
-        String saveToastText = ElementsActions.getToastMessage(driver);
-        boolean saveToastWasSuccess = !saveToastText.isBlank()
+        saveToastText = ElementsActions.getToastMessage(driver);
+        saveWasSuccessful = !saveToastText.isBlank()
                 && !Waits.isElementVisible(driver, By.cssSelector(".oxd-toast--error"), 1);
 
         Waits.waitForUrlContains(driver, "viewPersonalDetails");
         Waits.waitForLoaderToDisappear(driver);
+    }
 
-        EmployeeDetailsPage details = new EmployeeDetailsPage();
-        details.waitForRecordToLoad();
-        details.setCreationToast(saveToastText, saveToastWasSuccess);
-        return details;
+    public String getSaveToastText() {
+        return saveToastText;
+    }
+
+    public boolean wasSaveSuccessful() {
+        return saveWasSuccessful;
     }
 
     @Step("Save expecting a validation failure")
