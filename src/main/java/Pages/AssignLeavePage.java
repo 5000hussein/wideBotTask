@@ -46,10 +46,6 @@ public class AssignLeavePage extends BasePage {
         ElementsActions.selectFromOxdDropdown(driver, leaveTypeDropdown, leaveType);
     }
 
-    public java.util.List<String> getAvailableLeaveTypes() {
-        return ElementsActions.getOxdDropdownRealOptions(driver, leaveTypeDropdown);
-    }
-
     @Step("Set From Date to {date}")
     public void setFromDate(LocalDate date) {
         ElementsActions.setDate(driver, fromDateField, Helper.formatForApp(date));

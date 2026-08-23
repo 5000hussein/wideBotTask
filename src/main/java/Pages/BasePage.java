@@ -18,7 +18,6 @@ public abstract class BasePage {
     protected static final By TOAST = By.cssSelector(".oxd-toast");
     protected static final By TOAST_TITLE = By.cssSelector(".oxd-toast .oxd-text--toast-title");
     protected static final By TOAST_MESSAGE = By.cssSelector(".oxd-toast .oxd-text--toast-message");
-    protected static final By FIELD_ERROR = By.cssSelector(".oxd-input-field-error-message");
 
     protected BasePage() {
         this.driver = Drivers.getDriver();
@@ -27,15 +26,6 @@ public abstract class BasePage {
     //PageActions
     protected void openPath(String path) {
         driver.get(Config.getInstance().getBaseUrl() + path);
-
-        try {
-            Waits.waitForElementPresent(driver, By.cssSelector(
-                    ".oxd-layout, .orangehrm-login-layout, .orangehrm-login-container,"
-                            + " .oxd-main-menu, form"));
-        } catch (org.openqa.selenium.TimeoutException e) {
-            System.err.println("Application shell did not render within the timeout for " + path
-                    + "; continuing so the caller's own wait can report the specific control.");
-        }
         Waits.waitForLoaderToDisappear(driver);
     }
 
@@ -94,13 +84,6 @@ public abstract class BasePage {
 
     public void dismissToast() {
         ElementsActions.dismissToast(driver);
-    }
-
-    public java.util.List<String> getFieldErrors() {
-        if (!Waits.isElementVisible(driver, FIELD_ERROR, 5)) {
-            return java.util.List.of();
-        }
-        return ElementsActions.getAllTexts(driver, FIELD_ERROR);
     }
 
     public String getFieldErrorFor(String label) {
