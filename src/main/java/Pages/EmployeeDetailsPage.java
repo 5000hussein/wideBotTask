@@ -94,7 +94,8 @@ public class EmployeeDetailsPage extends BasePage {
 
     @Step("Reload the employee record")
     public void reload() {
-        refreshPage();
+        driver.navigate().refresh();
+        Waits.waitForLoaderToDisappear(driver);
         Waits.waitForElementVisible(driver, firstNameField);
         waitForRecordToLoad();
     }

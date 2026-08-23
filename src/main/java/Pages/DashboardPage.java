@@ -8,11 +8,33 @@ import org.openqa.selenium.By;
 
 public class DashboardPage extends BasePage {
     //Locators
+    private final By breadcrumbModule = By.cssSelector(".oxd-topbar-header-breadcrumb-module");
+    private final By userDropdownTab = By.cssSelector(".oxd-userdropdown-tab");
+    private final By userDropdownName = By.cssSelector(".oxd-userdropdown-name");
     private final By dashboardGrid = By.cssSelector(".orangehrm-dashboard-grid");
     private final By dashboardWidget = By.cssSelector(".orangehrm-dashboard-widget");
     private final By logoutMenuItem = By.xpath("//a[normalize-space()='Logout']");
 
     //PageActions
+    @Step("Open the {moduleName} module from the side menu")
+    public void openModule(String moduleName) {
+        By module = By.xpath("//aside//a[.//span[normalize-space()='" + moduleName + "']]");
+        ElementsActions.clickElement(driver, module);
+        Waits.waitForLoaderToDisappear(driver);
+    }
+
+    public String getBreadcrumbModule() {
+        return ElementsActions.getText(driver, breadcrumbModule);
+    }
+
+    public String getLoggedInUserName() {
+        return ElementsActions.getText(driver, userDropdownName);
+    }
+
+    public boolean isUserMenuDisplayed() {
+        return ElementsActions.isDisplayed(driver, userDropdownTab);
+    }
+
     @Step("Wait for the dashboard to load")
     public void waitUntilLoaded() {
         Waits.waitForUrlContains(driver, "dashboard");
@@ -32,7 +54,7 @@ public class DashboardPage extends BasePage {
 
     @Step("Log out")
     public void logout() {
-        ElementsActions.clickElement(driver, USER_DROPDOWN_TAB);
+        ElementsActions.clickElement(driver, userDropdownTab);
         ElementsActions.clickElement(driver, logoutMenuItem);
         Waits.waitForUrlContains(driver, "auth/login");
     }

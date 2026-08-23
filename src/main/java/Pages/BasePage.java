@@ -10,11 +10,6 @@ import org.openqa.selenium.WebDriver;
 public abstract class BasePage {
     protected final WebDriver driver;
 
-    //Locators
-    protected static final By BREADCRUMB_MODULE = By.cssSelector(".oxd-topbar-header-breadcrumb-module");
-    protected static final By USER_DROPDOWN_NAME = By.cssSelector(".oxd-userdropdown-name");
-    protected static final By USER_DROPDOWN_TAB = By.cssSelector(".oxd-userdropdown-tab");
-
     protected BasePage() {
         this.driver = Drivers.getDriver();
     }
@@ -25,36 +20,13 @@ public abstract class BasePage {
         Waits.waitForLoaderToDisappear(driver);
     }
 
-    public void openModule(String moduleName) {
-        By module = By.xpath("//aside//a[.//span[normalize-space()='" + moduleName + "']]");
-        ElementsActions.clickElement(driver, module);
-        Waits.waitForLoaderToDisappear(driver);
-    }
-
     public boolean isModuleForbidden() {
         return Waits.isElementVisible(driver,
                 By.xpath("//*[contains(normalize-space(),'Module Forbidden')]"), 3);
     }
 
-    public String getBreadcrumbModule() {
-        return ElementsActions.getText(driver, BREADCRUMB_MODULE);
-    }
-
-    public String getLoggedInUserName() {
-        return ElementsActions.getText(driver, USER_DROPDOWN_NAME);
-    }
-
-    public boolean isUserMenuDisplayed() {
-        return ElementsActions.isDisplayed(driver, USER_DROPDOWN_TAB);
-    }
-
     public String getCurrentUrl() {
         return driver.getCurrentUrl();
-    }
-
-    public void refreshPage() {
-        driver.navigate().refresh();
-        Waits.waitForLoaderToDisappear(driver);
     }
 
     private String lastToastText = "";
