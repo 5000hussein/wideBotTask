@@ -35,12 +35,15 @@ public abstract class BaseTest {
                 : browserFromSuite;
 
         driver = Drivers.setUpDriver(browser, Config.getInstance().isHeadless());
-        loginPage = new LoginPage().open();
+        loginPage = new LoginPage();
+        loginPage.open();
     }
 
     @Step("Sign in and land on the dashboard")
     protected DashboardPage loginToDashboard() {
-        dashboardPage = new LoginPage().open().loginWithValidCredentials();
+        LoginPage login = new LoginPage();
+        login.open();
+        dashboardPage = login.loginWithValidCredentials();
         return dashboardPage;
     }
 
@@ -74,7 +77,8 @@ public abstract class BaseTest {
 
         for (DataFactory.Employee employee : createdEmployees) {
             try {
-                PimEmployeeListPage list = new PimEmployeeListPage().open();
+                PimEmployeeListPage list = new PimEmployeeListPage();
+                list.open();
 
                 if (!list.setEmployeeNameFilter(employee.lastName())) {
                     System.out.println("Cleanup: '" + employee.lastName()

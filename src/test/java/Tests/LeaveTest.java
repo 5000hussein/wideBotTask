@@ -61,7 +61,8 @@ public class LeaveTest extends BaseTest {
     @Description("Documents the environment constraint that makes the self-service Apply screen "
             + "unusable for the Admin account, and pins it so a change in entitlement is noticed.")
     public void verifyApplyLeaveScreenMatchesEntitlementState() {
-        ApplyLeavePage apply = new ApplyLeavePage().open();
+        ApplyLeavePage apply = new ApplyLeavePage();
+        apply.open();
         ApplyLeavePage.State state = apply.getState();
 
         assertNotEquals(state, ApplyLeavePage.State.UNKNOWN,
@@ -89,10 +90,13 @@ public class LeaveTest extends BaseTest {
     @Description("Creates a dedicated employee and grants a leave entitlement, so the leave request "
             + "does not depend on pre-existing shared data.")
     public void verifyUserCanCreateEmployeeWithLeaveEntitlement() {
-        new AddEmployeePage().open().saveAndOpenRecord(leaveEmployee);
+        AddEmployeePage addEmployee = new AddEmployeePage();
+        addEmployee.open();
+        addEmployee.saveAndOpenRecord(leaveEmployee);
         registerForCleanup(leaveEmployee);
 
-        LeaveEntitlementPage entitlement = new LeaveEntitlementPage().open();
+        LeaveEntitlementPage entitlement = new LeaveEntitlementPage();
+        entitlement.open();
 
         assertTrue(entitlement.selectEmployee(leaveEmployee.fullName()),
                 "The newly created employee should be selectable for an entitlement");
@@ -120,7 +124,8 @@ public class LeaveTest extends BaseTest {
     @Description("Step 8a: submit a leave request using a runtime-calculated date range and verify "
             + "the success notification.")
     public void verifyUserCanSubmitLeaveRequest() {
-        AssignLeavePage assign = new AssignLeavePage().open();
+        AssignLeavePage assign = new AssignLeavePage();
+        assign.open();
         assign.verifyAssignLeavePageLoaded();
 
         assertTrue(assign.selectEmployee(leaveEmployee.fullName()),
@@ -155,7 +160,8 @@ public class LeaveTest extends BaseTest {
     @Description("Step 8b: find the submitted request in the Leave List and verify its employee, "
             + "type, date range and day count -- proving it was persisted, not just announced.")
     public void verifySubmittedLeaveCanBeFound() {
-        LeaveListPage leaveList = new LeaveListPage().open();
+        LeaveListPage leaveList = new LeaveListPage();
+        leaveList.open();
 
         leaveList.includeStatus("Scheduled");
         leaveList.setDateRange(fromDate, toDate);

@@ -19,10 +19,9 @@ public class LeaveEntitlementPage extends BasePage {
 
     //PageActions
     @Step("Open Leave > Add Entitlement")
-    public LeaveEntitlementPage open() {
+    public void open() {
         openPath(PATH);
         Waits.waitForElementVisible(driver, entitlementField);
-        return this;
     }
 
     @Step("Select employee {fullName}")

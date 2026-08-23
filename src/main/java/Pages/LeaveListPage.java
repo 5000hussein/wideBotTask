@@ -39,10 +39,9 @@ public class LeaveListPage extends BasePage {
 
     //PageActions
     @Step("Open Leave > Leave List")
-    public LeaveListPage open() {
+    public void open() {
         openPath(PATH);
         Waits.waitForElementVisible(driver, searchButton);
-        return this;
     }
 
     @Step("Filter leave from {from} to {to}")

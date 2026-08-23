@@ -35,7 +35,8 @@ public class NegativeTest extends BaseTest {
     @Description("Example A: submit Add Employee with the required Last Name empty. Expect an inline "
             + "'Required' message, no navigation, and no employee created.")
     public void verifyEmployeeCannotBeCreatedWithoutLastName() {
-        AddEmployeePage addEmployee = new AddEmployeePage().open();
+        AddEmployeePage addEmployee = new AddEmployeePage();
+        addEmployee.open();
 
         String firstName = DataFactory.negativeFirstName();
         addEmployee.enterFirstName(firstName);
@@ -52,7 +53,8 @@ public class NegativeTest extends BaseTest {
 
         checkpoint("15-negative-required-field");
 
-        PimEmployeeListPage list = new PimEmployeeListPage().open();
+        PimEmployeeListPage list = new PimEmployeeListPage();
+        list.open();
         assertFalse(list.setEmployeeNameFilter(firstName),
                 "No employee should have been created by the rejected submission, "
                         + "but the search offered a match for '" + firstName + "'");
@@ -65,7 +67,8 @@ public class NegativeTest extends BaseTest {
     @Description("Example B: enter a first name beyond the field's 30-character limit and expect the "
             + "form to reject it rather than silently truncating or storing it.")
     public void verifyEmployeeCannotBeCreatedWithOverlongFirstName() {
-        AddEmployeePage addEmployee = new AddEmployeePage().open();
+        AddEmployeePage addEmployee = new AddEmployeePage();
+        addEmployee.open();
 
         String overlongName = DataFactory.overlongFirstName();
         addEmployee.enterFirstName(overlongName);
@@ -96,7 +99,8 @@ public class NegativeTest extends BaseTest {
     @Description("Example C: submit Assign Leave with To Date before From Date and expect the form "
             + "to refuse it.")
     public void verifyLeaveCannotBeAssignedWithEndDateBeforeStartDate() {
-        AssignLeavePage assign = new AssignLeavePage().open();
+        AssignLeavePage assign = new AssignLeavePage();
+        assign.open();
 
         if (assign.isModuleForbidden()) {
             throw new SkipException("Leave > Assign Leave returns '403 Module Forbidden' for the "
@@ -131,7 +135,8 @@ public class NegativeTest extends BaseTest {
     public void verifyInvalidCredentialsAreRejected() {
         new Pages.DashboardPage().logout();
 
-        LoginPage login = new LoginPage().open();
+        LoginPage login = new LoginPage();
+        login.open();
         login.loginExpectingFailure(Config.getInstance().getUsername(), DataFactory.invalidPassword());
 
         assertEquals(login.getAlertMessage(), "Invalid credentials",

@@ -46,7 +46,8 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 2: an employee that already exists is located by name and every returned row "
             + "is verified against the search criteria.")
     public void verifyUserCanSearchForAnExistingEmployee() {
-        PimEmployeeListPage list = new PimEmployeeListPage().open();
+        PimEmployeeListPage list = new PimEmployeeListPage();
+        list.open();
         list.verifyEmployeeListPageLoaded();
 
         int totalBefore = list.getRecordCount();
@@ -107,7 +108,8 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 3: create an employee with runtime-generated data and verify the success "
             + "notification and the generated employee id.")
     public void verifyUserCanCreateNewEmployee() {
-        AddEmployeePage addEmployee = new AddEmployeePage().open();
+        AddEmployeePage addEmployee = new AddEmployeePage();
+        addEmployee.open();
         addEmployee.verifyAddEmployeePageLoaded();
 
         String prefilledId = addEmployee.getPrefilledEmployeeId();
@@ -139,7 +141,8 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 4a: prove persistence by finding the new employee through the employee list, "
             + "not by trusting the creation toast.")
     public void verifyCreatedEmployeeIsFoundInEmployeeList() {
-        PimEmployeeListPage list = new PimEmployeeListPage().open();
+        PimEmployeeListPage list = new PimEmployeeListPage();
+        list.open();
 
         assertTrue(list.setEmployeeNameFilter(employee.fullName()),
                 "The new employee should be offered by the name autocomplete");
@@ -164,7 +167,8 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 4b: open the record from the list and verify name, employee id and that the "
             + "detail tabs are reachable.")
     public void verifyCreatedEmployeeRecordShowsCorrectDetails() {
-        PimEmployeeListPage list = new PimEmployeeListPage().open();
+        PimEmployeeListPage list = new PimEmployeeListPage();
+        list.open();
         list.setEmployeeNameFilter(employee.fullName());
         list.clickSearch();
 
@@ -235,7 +239,8 @@ public class EmployeeTest extends BaseTest {
     @Severity(SeverityLevel.CRITICAL)
     @Description("Step 6a: reload the record and confirm the edit did not revert.")
     public void verifyUpdatedInformationSurvivesRefresh() {
-        EmployeeDetailsPage details = openCreatedEmployeeRecord().reload();
+        EmployeeDetailsPage details = openCreatedEmployeeRecord();
+        details.reload();
 
         assertEquals(details.getFirstName(), editedEmployee.firstName(),
                 "The updated first name should survive a refresh");
@@ -254,14 +259,16 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 6b: leave the employee record entirely, return to it, and confirm the update "
             + "is still there -- including in the employee list, which reads from a different query.")
     public void verifyUpdatedInformationSurvivesNavigationAway() {
-        EmployeeDetailsPage details = openCreatedEmployeeRecord().navigateAwayAndReturn();
+        EmployeeDetailsPage details = openCreatedEmployeeRecord();
+        details.navigateAwayAndReturn();
 
         assertEquals(details.getFirstName(), editedEmployee.firstName(),
                 "The updated first name should still be present after navigating away and back");
         assertEquals(details.getEmployeeId(), editedEmployee.employeeId(),
                 "The updated employee id should still be present after navigating away and back");
 
-        PimEmployeeListPage list = new PimEmployeeListPage().open();
+        PimEmployeeListPage list = new PimEmployeeListPage();
+        list.open();
         list.setEmployeeNameFilter(editedEmployee.fullName());
         list.clickSearch();
 
@@ -282,7 +289,8 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 7a: filter by Employment Status AND Job Title, then verify the DATA in every "
             + "returned row honours both criteria.")
     public void verifyUserCanFilterEmployeeListByTwoCriteria() {
-        PimEmployeeListPage list = new PimEmployeeListPage().open();
+        PimEmployeeListPage list = new PimEmployeeListPage();
+        list.open();
 
         List<String> statuses = list.getAvailableEmploymentStatuses();
         assertFalse(statuses.isEmpty(), "The environment should define employment statuses to filter by");
@@ -382,7 +390,8 @@ public class EmployeeTest extends BaseTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("Step 7b: Reset clears every criterion and the unfiltered total returns.")
     public void verifyResetRestoresFullResultSet() {
-        PimEmployeeListPage list = new PimEmployeeListPage().open();
+        PimEmployeeListPage list = new PimEmployeeListPage();
+        list.open();
         int unfilteredTotal = list.getRecordCount();
         assertTrue(unfilteredTotal > 0, "The unfiltered list should report a record count");
 
@@ -439,7 +448,8 @@ public class EmployeeTest extends BaseTest {
         driver.get(Config.getInstance().getBaseUrl()
                 + "/web/index.php/pim/viewPersonalDetails/empNumber/" + empNumber);
         Util.Waits.waitForLoaderToDisappear(driver);
-        EmployeeDetailsPage details = new EmployeeDetailsPage().waitForRecordToLoad();
+        EmployeeDetailsPage details = new EmployeeDetailsPage();
+        details.waitForRecordToLoad();
         details.verifyEmployeeDetailsPageLoaded();
         return details;
     }

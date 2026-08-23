@@ -19,10 +19,9 @@ public class LoginPage extends BasePage {
 
     //PageActions
     @Step("Open the OrangeHRM login page")
-    public LoginPage open() {
+    public void open() {
         openPath(PATH);
         Waits.waitForElementVisible(driver, usernameField);
-        return this;
     }
 
     public boolean isLoginPageDisplayed() {

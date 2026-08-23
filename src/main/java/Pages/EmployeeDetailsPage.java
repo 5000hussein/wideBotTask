@@ -42,12 +42,11 @@ public class EmployeeDetailsPage extends BasePage {
     }
 
     @Step("Wait for the employee record to finish loading")
-    public EmployeeDetailsPage waitForRecordToLoad() {
+    public void waitForRecordToLoad() {
         Waits.retryOnStale(driver, d -> {
             String firstName = d.findElement(firstNameField).getDomProperty("value");
             return firstName != null && !firstName.isBlank();
         });
-        return this;
     }
 
     public String getEmpNumberFromUrl() {
@@ -109,21 +108,21 @@ public class EmployeeDetailsPage extends BasePage {
     }
 
     @Step("Reload the employee record")
-    public EmployeeDetailsPage reload() {
+    public void reload() {
         refreshPage();
         Waits.waitForElementVisible(driver, firstNameField);
-        return waitForRecordToLoad();
+        waitForRecordToLoad();
     }
 
     @Step("Navigate away and return to this employee record")
-    public EmployeeDetailsPage navigateAwayAndReturn() {
+    public void navigateAwayAndReturn() {
         String recordUrl = driver.getCurrentUrl();
         new DashboardPage().openModule("Dashboard");
         Waits.waitForUrlContains(driver, "dashboard");
         driver.get(recordUrl);
         Waits.waitForElementVisible(driver, firstNameField);
         Waits.waitForLoaderToDisappear(driver);
-        return waitForRecordToLoad();
+        waitForRecordToLoad();
     }
 
     //PageAssertions

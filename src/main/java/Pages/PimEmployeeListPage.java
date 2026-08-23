@@ -43,11 +43,10 @@ public class PimEmployeeListPage extends BasePage {
 
     //PageActions
     @Step("Open PIM > Employee List")
-    public PimEmployeeListPage open() {
+    public void open() {
         openPath(PATH);
         Waits.waitForElementVisible(driver, searchButton);
         Waits.waitForLoaderToDisappear(driver);
-        return this;
     }
 
 
@@ -179,7 +178,9 @@ public class PimEmployeeListPage extends BasePage {
         ElementsActions.clickElement(driver, nameCell);
         Waits.waitForUrlContains(driver, "viewPersonalDetails");
         Waits.waitForLoaderToDisappear(driver);
-        return new EmployeeDetailsPage().waitForRecordToLoad();
+        EmployeeDetailsPage details = new EmployeeDetailsPage();
+        details.waitForRecordToLoad();
+        return details;
     }
 
     @Step("Delete the employee with last name {lastName}")

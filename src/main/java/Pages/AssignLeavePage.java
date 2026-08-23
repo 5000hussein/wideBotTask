@@ -30,10 +30,9 @@ public class AssignLeavePage extends BasePage {
 
     //PageActions
     @Step("Open Leave > Assign Leave")
-    public AssignLeavePage open() {
+    public void open() {
         openPath(PATH);
         Waits.waitForElementVisible(driver, assignButton);
-        return this;
     }
 
 

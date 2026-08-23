@@ -16,10 +16,9 @@ public class ApplyLeavePage extends BasePage {
 
     //PageActions
     @Step("Open Leave > Apply")
-    public ApplyLeavePage open() {
+    public void open() {
         openPath(PATH);
         Waits.waitForLoaderToDisappear(driver);
-        return this;
     }
 
     public boolean isNoLeaveBalanceMessageDisplayed() {

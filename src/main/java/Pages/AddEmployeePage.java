@@ -20,10 +20,9 @@ public class AddEmployeePage extends BasePage {
 
     //PageActions
     @Step("Open PIM > Add Employee")
-    public AddEmployeePage open() {
+    public void open() {
         openPath(PATH);
         Waits.waitForElementVisible(driver, firstNameField);
-        return this;
     }
 
 

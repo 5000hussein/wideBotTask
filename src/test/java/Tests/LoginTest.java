@@ -26,7 +26,8 @@ public class LoginTest extends BaseTest {
     @Severity(SeverityLevel.BLOCKER)
     @Description("Step 1a: the login page and each of its three required controls are present.")
     public void verifyLoginPageIsDisplayedWithAllControls() {
-        LoginPage login = new LoginPage().open();
+        LoginPage login = new LoginPage();
+        login.open();
 
         assertTrue(login.isLoginPageDisplayed(), "Login page (title + branding) should be displayed");
         assertTrue(login.isUsernameFieldDisplayed(), "Username field should be available");
@@ -44,7 +45,9 @@ public class LoginTest extends BaseTest {
     @Severity(SeverityLevel.BLOCKER)
     @Description("Step 1b: login succeeds, the dashboard renders, and the signed-in user is identified.")
     public void verifyUserCanLoginWithValidCredentials() {
-        DashboardPage dashboard = new LoginPage().open().loginWithValidCredentials();
+        LoginPage login = new LoginPage();
+        login.open();
+        DashboardPage dashboard = login.loginWithValidCredentials();
 
         assertTrue(dashboard.isDashboardDisplayed(),
                 "Dashboard should be displayed after a successful login");
