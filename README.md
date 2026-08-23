@@ -90,24 +90,26 @@ place on the PATH.
 Layered, so that a UI change touches exactly one layer.
 
 ```
-        Tests/                 what SHOULD happen  — assertions live here, and only here
+        Tests/                 what SHOULD happen — a sequence of page calls, no assertions
           |
-        Pages/                 what the screen CAN do — intent, no assertions
+        Pages/                 what the screen CAN do, and what it SHOULD show —
+                               actions plus the verify* methods that assert them
           |
    ElementsActions / Waits     how to interact safely — every DOM quirk handled once
           |
         Drivers                browser lifecycle (ThreadLocal)
           |
-   Config / DataFactory  environment values and generated data
+   Config / Helper             environment values and test data from data.json
 ```
 
 **Design decisions worth calling out:**
 
-- **Pages assert page state; tests assert business outcomes.** A page may say "this screen
-  loaded" (`verifyAddEmployeePageLoaded()`) because every caller wants the same answer. A page
-  must not say "the employee was created" — the positive test, the cleanup routine and the
-  negative test each want a different answer from `findRowByLastName()`, so it returns an
-  `Optional` and lets the caller decide.
+- **Assertions live in the page objects, not the tests.** Each page has a `//PageAssertions`
+  section whose `verify*` methods assert against the locators sitting a few lines above them
+  (`verifyRowMatches(...)`, `verifySaveWasConfirmed()`, `verifyFieldRejectedWith(...)`). A test
+  is therefore a readable sequence of page calls — `EmployeeTest` contains no `Assert` import at
+  all — and a screen's expectations change in one file. `Validations` wraps TestNG's `Assert` so
+  the pages never import a test framework directly.
 - **No implicit waits.** Mixing implicit and explicit waits makes timeouts unpredictable. Every
   wait is explicit and waits for the *meaningful* state — a table row **with cells**, a field
   **with a value** — not a proxy that resolves too early.
@@ -147,8 +149,7 @@ Layered, so that a UI change touches exactly one layer.
 │       ├── Waits.java               # every wait, stale-tolerant
 │       ├── Scrolling.java
 │       ├── ElementsActions.java     # all oxd-component interaction rules
-│       ├── DataFactory.java         # unique data + app-format dates
-│       ├── Helper.java              # reads TestData/data.json
+│       ├── Helper.java              # data.json reader + app-format dates
 │       ├── Validations.java         # assertion wrapper
 │       └── ScreenshotUtil.java      # disk + Allure attachment
 ├── src/main/resources/
@@ -341,30 +342,34 @@ your CI's secret store and leave the file alone.
 
 ## Test-data strategy and cleanup
 
-**Nothing the suite types into the application is a fixed literal.**
+**Every literal the suite types lives in `src/main/resources/TestData/data.json`,** read through
+`Helper.getData("key")`. No test hard-codes a name, an id, a password or a day count in Java.
 
-**Generation.** `DataFactory` builds a run tag from the current timestamp, embedded in every
-generated last name and employee id (`QA<runTag><n>`, `EMP<runTag><n>`). Therefore:
-
-- two runs never collide, even concurrently or on a shared environment;
-- any record created by this suite is identifiable as ours;
-- a search by the generated last name returns **exactly one** row, which is what allows the
-  assertions to be exact rather than "contains something".
+**Two employee identities**, because `EmployeeTest` and `LeaveTest` each create a record: the PIM
+suite uses `firstName`/`lastName`/`employeeId`, the leave suite the `leave*` keys. They are kept
+distinct so a single run cannot fail on OrangeHRM's duplicate-Employee-Id validation.
 
 **Dates** are calculated at runtime, never hard-coded — the leave window is the *next Monday to
 the following Wednesday*. Anchoring to a Monday keeps the working-day count deterministic at 3;
-a window that straddled a weekend would make the expected day count vary by run day.
+a window that straddled a weekend would make the expected day count vary by run day. The app's
+`yyyy-dd-MM` quirk is applied in one place, `Helper.APP_DATE_FORMAT`.
 
 **Cleanup.** Every employee a test creates is registered with `registerForCleanup(...)` and
 deleted in `@AfterClass`, while the session is still alive.
 
-- Cleanup searches by the **generated last name**, not the full name. The edit scenario
-  deliberately changes the first name, so a full-name lookup finds nothing, concludes the record
-  is already gone, and silently leaves it behind — precisely the pollution cleanup exists to
-  prevent.
+- Cleanup searches by **last name**, not the full name. The edit scenario deliberately changes
+  the first name, so a full-name lookup finds nothing, concludes the record is already gone, and
+  silently leaves it behind — precisely the pollution cleanup exists to prevent.
 - Cleanup **never fails the suite**. A cleanup problem is housekeeping, not a product defect.
   Anything left behind is logged loudly, with a screenshot, so it can be removed by hand.
 - Disable it to inspect records after a run: `-Dcleanup.enabled=false`.
+
+> **Reruns depend on cleanup having succeeded.** Because the identities in `data.json` are fixed
+> rather than tagged per run, a record left behind by a crashed run — or by `cleanup.enabled=false`
+> — makes the next run fail at creation with *"Employee Id already exists"*. Delete the leftover
+> in the UI, or edit the ids in `data.json`. This is the deliberate trade for keeping the test
+> data readable and declarative; a timestamp-tagged scheme avoids the collision but puts generated
+> values in Java and leaves untraceable rows behind when cleanup cannot run.
 
 **What is deliberately *not* cleaned up, and why:**
 
@@ -373,12 +378,8 @@ deleted in `@AfterClass`, while the session is still alive.
 | Employees created by tests | **Yes** | Deleted via the UI's row action + confirmation |
 | Leave entitlements granted to those employees | Indirectly | Deleting the employee removes their entitlements |
 | Leave requests submitted for those employees | Indirectly | Removed with the employee |
-| Employees from a *crashed* run | No | The process died before `@AfterClass`; the run tag makes them identifiable — search `QA` + the tag |
+| Employees from a *crashed* run | No | The process died before `@AfterClass`; find them by the last names in `data.json` |
 | Anything created by a **rejected** submission | N/A | Nothing was created — the negative tests assert this |
-
-**Why deletion, rather than only unique data:** unique data alone still grows the shared database
-without bound. Deletion plus unique naming gives both a clean environment and traceability when
-cleanup cannot complete.
 
 ---
 
@@ -434,7 +435,7 @@ are written up properly in [`docs/bug-report.md`](docs/bug-report.md).
 1. **Dates are `yyyy-dd-MM` — year, day, month.** Proof from the application itself: the 2026
    leave period renders as `2026-01-01 - 2026-31-12`. Using ISO `yyyy-MM-dd` silently submits the
    **wrong day** whenever the day of month is ≤ 12. Raised as **BUG-002**; the suite formats
-   dates to match the app's real behaviour via a single constant, `DataFactory.APP_DATE_FORMAT`.
+   dates to match the app's real behaviour via a single constant, `Helper.APP_DATE_FORMAT`.
 2. **`Leave → Apply` is unusable for an account with no entitlement** — it renders
    "No Leave Types with Leave Balance" instead of a form. The suite therefore creates leave via
    **Assign Leave** (the administrator's equivalent flow) against an employee it creates and
