@@ -11,15 +11,11 @@ import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
-import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.util.List;
-import java.util.Optional;
 
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -194,102 +190,15 @@ public class EmployeeTest extends BaseTest {
             description = "Two filter criteria applied together return only matching data")
     @Story("Employee list filtering")
     @Severity(SeverityLevel.NORMAL)
-    @Description("Step 7a: filter by Employment Status AND Job Title, then verify the DATA in every "
+    @Description("Step 7a: filter by Employment Status AND Sub Unit, then verify the DATA in every "
             + "returned row honours both criteria.")
     public void verifyUserCanFilterEmployeeListByTwoCriteria() {
         list.open();
+        list.verifyFilteringByStatusAndSubUnit();
 
-        List<String> statuses = list.getAvailableEmploymentStatuses();
-        assertFalse(statuses.isEmpty(), "The environment should define employment statuses to filter by");
-
-        List<SecondCriterion> secondCriteria = availableSecondCriteria(list);
-
-        String chosenStatus = null;
-        String chosenSecondValue = null;
-        SecondCriterion second = null;
-        List<PimEmployeeListPage.EmployeeRow> statusRows = List.of();
-
-        outer:
-        for (SecondCriterion criterion : secondCriteria) {
-            for (String status : statuses) {
-                list.open();
-                list.setEmploymentStatusFilter(status);
-                list.clickSearch();
-
-                List<PimEmployeeListPage.EmployeeRow> rows = list.getAllRows();
-                if (rows.isEmpty()) {
-                    continue;
-                }
-
-                Optional<String> candidate = rows.stream()
-                        .map(criterion.valueOf())
-                        .filter(value -> !value.isBlank())
-                        .filter(value -> criterion.options().stream()
-                                .anyMatch(option -> option.equalsIgnoreCase(value)))
-                        .findFirst();
-
-                if (candidate.isPresent()) {
-                    second = criterion;
-                    chosenStatus = status;
-                    chosenSecondValue = candidate.get();
-                    statusRows = rows;
-                    break outer;
-                }
-            }
-        }
-        assertNotNull(second, "No second filter criterion had data to filter on in this environment");
-        assertNotNull(chosenStatus, "No employment status returned employees to filter on");
-        assertNotNull(chosenSecondValue, "No filterable second-criterion value was found");
-        System.out.println("Second filter criterion in use: " + second.label());
-
-        for (PimEmployeeListPage.EmployeeRow row : statusRows) {
-            assertEquals(row.employmentStatus(), chosenStatus,
-                    "Every row should match the Employment Status filter");
-        }
-
-        second.apply().accept(chosenSecondValue);
-        list.clickSearch();
-
-        List<PimEmployeeListPage.EmployeeRow> filtered = list.getAllRows();
-        assertFalse(filtered.isEmpty(),
-                "Filtering by a combination that exists should return at least one row");
-
-        for (PimEmployeeListPage.EmployeeRow row : filtered) {
-            assertEquals(row.employmentStatus(), chosenStatus,
-                    "Every row should match the Employment Status filter");
-            assertEquals(second.valueOf().apply(row), chosenSecondValue,
-                    "Every row should match the " + second.label() + " filter");
-        }
-        assertTrue(filtered.size() <= statusRows.size(),
-                "Adding a second criterion must not widen the result set");
-
-        System.out.println("Filtered by status='" + chosenStatus + "' and " + second.label()
-                + "='" + chosenSecondValue + "' -> " + filtered.size() + " rows");
         checkpoint("10-employee-list-filtered");
     }
 
-    private record SecondCriterion(String label, List<String> options,
-                                   java.util.function.Consumer<String> apply,
-                                   java.util.function.Function<PimEmployeeListPage.EmployeeRow, String> valueOf) {
-    }
-
-    private List<SecondCriterion> availableSecondCriteria(PimEmployeeListPage list) {
-        List<SecondCriterion> candidates = List.of(
-                new SecondCriterion("Job Title", list.getAvailableJobTitles(),
-                        list::setJobTitleFilter, PimEmployeeListPage.EmployeeRow::jobTitle),
-                new SecondCriterion("Sub Unit", list.getAvailableSubUnits(),
-                        list::setSubUnitFilter, PimEmployeeListPage.EmployeeRow::subUnit));
-
-        List<SecondCriterion> usable = candidates.stream()
-                .filter(criterion -> !criterion.options().isEmpty())
-                .toList();
-        if (usable.isEmpty()) {
-            throw new SkipException(
-                    "This environment defines neither job titles nor sub units, so there is no "
-                            + "second criterion available to filter by.");
-        }
-        return usable;
-    }
 
     @Test(priority = 9, groups = {"regression"}, dependsOnMethods = "verifyUserCanFilterEmployeeListByTwoCriteria",
             description = "Clearing the filters restores the full result set")

@@ -3,6 +3,7 @@ package Pages;
 import Util.ElementsActions;
 import Util.Validations;
 import Util.Waits;
+import org.testng.SkipException;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -22,7 +23,6 @@ public class PimEmployeeListPage extends BasePage {
                     + "//input[@placeholder='Type for hints...']");
     private final By employeeIdInput = inputByLabel("Employee Id");
     private final By employmentStatusDropdown = dropdownByLabel("Employment Status");
-    private final By jobTitleDropdown = dropdownByLabel("Job Title");
     private final By subUnitDropdown = dropdownByLabel("Sub Unit");
 
     private final By searchButton = By.cssSelector("button[type='submit']");
@@ -38,7 +38,6 @@ public class PimEmployeeListPage extends BasePage {
     private static final int COL_ID = 1;
     private static final int COL_FIRST_MIDDLE_NAME = 2;
     private static final int COL_LAST_NAME = 3;
-    private static final int COL_JOB_TITLE = 4;
     private static final int COL_EMPLOYMENT_STATUS = 5;
     private static final int COL_SUB_UNIT = 6;
 
@@ -64,11 +63,6 @@ public class PimEmployeeListPage extends BasePage {
         ElementsActions.selectFromOxdDropdown(driver, employmentStatusDropdown, status);
     }
 
-    @Step("Filter by job title: {jobTitle}")
-    public void setJobTitleFilter(String jobTitle) {
-        ElementsActions.selectFromOxdDropdown(driver, jobTitleDropdown, jobTitle);
-    }
-
     @Step("Filter by sub unit: {subUnit}")
     public void setSubUnitFilter(String subUnit) {
         ElementsActions.selectFromOxdDropdown(driver, subUnitDropdown, subUnit);
@@ -76,10 +70,6 @@ public class PimEmployeeListPage extends BasePage {
 
     public String getSelectedEmploymentStatus() {
         return ElementsActions.getOxdDropdownValue(driver, employmentStatusDropdown);
-    }
-
-    public List<String> getAvailableJobTitles() {
-        return ElementsActions.getOxdDropdownRealOptions(driver, jobTitleDropdown);
     }
 
     public List<String> getAvailableEmploymentStatuses() {
@@ -149,7 +139,6 @@ public class PimEmployeeListPage extends BasePage {
                         text(cells, COL_ID),
                         text(cells, COL_FIRST_MIDDLE_NAME),
                         text(cells, COL_LAST_NAME),
-                        text(cells, COL_JOB_TITLE),
                         text(cells, COL_EMPLOYMENT_STATUS),
                         text(cells, COL_SUB_UNIT)));
             }
@@ -200,7 +189,7 @@ public class PimEmployeeListPage extends BasePage {
     }
 
     public record EmployeeRow(String id, String firstAndMiddleName, String lastName,
-                              String jobTitle, String employmentStatus, String subUnit) {
+                              String employmentStatus, String subUnit) {
         public String fullName() {
             return (firstAndMiddleName + " " + lastName).trim();
         }
@@ -247,6 +236,53 @@ public class PimEmployeeListPage extends BasePage {
                 "The employee list should report the updated employee id");
         Validations.validateContains(row.firstAndMiddleName(), firstName,
                 "The employee list should report the updated first name");
+    }
+
+    @Step("Filter by Employment Status and Sub Unit and verify every row honours both")
+    public void verifyFilteringByStatusAndSubUnit() {
+        List<String> statuses = getAvailableEmploymentStatuses();
+        Validations.validateFalse(statuses.isEmpty(),
+                "The environment should define employment statuses to filter by");
+
+        for (String status : statuses) {
+            open();
+            setEmploymentStatusFilter(status);
+            clickSearch();
+
+            List<EmployeeRow> statusRows = getAllRows();
+            Optional<String> subUnit = statusRows.stream()
+                    .map(EmployeeRow::subUnit)
+                    .filter(value -> !value.isBlank())
+                    .findFirst();
+            if (subUnit.isEmpty()) {
+                continue;
+            }
+
+            for (EmployeeRow row : statusRows) {
+                Validations.validateEquals(row.employmentStatus(), status,
+                        "Every row should match the Employment Status filter");
+            }
+
+            setSubUnitFilter(subUnit.get());
+            clickSearch();
+
+            List<EmployeeRow> filtered = getAllRows();
+            Validations.validateFalse(filtered.isEmpty(),
+                    "Filtering by a combination that exists should return at least one row");
+            for (EmployeeRow row : filtered) {
+                Validations.validateEquals(row.employmentStatus(), status,
+                        "Every row should match the Employment Status filter");
+                Validations.validateEquals(row.subUnit(), subUnit.get(),
+                        "Every row should match the Sub Unit filter");
+            }
+            Validations.validateTrue(filtered.size() <= statusRows.size(),
+                    "Adding a second criterion must not widen the result set");
+            return;
+        }
+
+        throw new SkipException(
+                "No employment status in this environment returned employees carrying a sub unit, "
+                        + "so there is no two-criteria combination to filter on.");
     }
 
     @Step("Verify every result carries the searched last name {lastName}")
