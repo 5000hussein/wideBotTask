@@ -52,26 +52,6 @@ public class EmployeeTest extends BaseTest {
     }
 
     @Test(priority = 1, groups = {"smoke", "regression"},
-            description = "Searching by name returns only employees matching that name")
-    @Story("Employee search")
-    @Severity(SeverityLevel.CRITICAL)
-    @Description("Step 2: an employee that already exists is located by name and every returned row "
-            + "is verified against the search criteria.")
-    public void verifyUserCanSearchForAnExistingEmployee() {
-        list.open();
-        list.verifyEmployeeListPageLoaded();
-
-        int totalBefore = list.verifyListHasRecords();
-        PimEmployeeListPage.EmployeeRow seed = pickSeedOfferedByAutocomplete();
-
-        list.clickSearch();
-        list.verifyEveryRowMatches(seed.lastName(), totalBefore);
-        list.verifyRowMatches(seed.lastName(), seed.id(), seed.firstAndMiddleName());
-
-        checkpoint("03-employee-search-results");
-    }
-
-    @Test(priority = 2, groups = {"smoke", "regression"},
             description = "A new employee is created from data held in data.json")
     @Story("Employee creation")
     @Severity(SeverityLevel.BLOCKER)
@@ -93,6 +73,27 @@ public class EmployeeTest extends BaseTest {
 
         checkpoint("04-employee-created");
         details.dismissToast();
+    }
+
+    @Test(priority = 2, groups = {"smoke", "regression"},
+            dependsOnMethods = "verifyUserCanCreateNewEmployee",
+            description = "Searching by name returns only employees matching that name")
+    @Story("Employee search")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Step 2: an employee is located by name and every returned row is verified "
+            + "against the search criteria.")
+    public void verifyUserCanSearchForAnExistingEmployee() {
+        list.open();
+        list.verifyEmployeeListPageLoaded();
+
+        int totalBefore = list.verifyListHasRecords();
+        list.verifyEmployeeIsOffered(fullName);
+        list.clickSearch();
+
+        list.verifyEveryRowMatches(lastName, totalBefore);
+        list.verifyRowMatches(lastName, employeeId, firstAndMiddleName);
+
+        checkpoint("03-employee-search-results");
     }
 
     @Test(priority = 3, groups = {"regression"}, dependsOnMethods = "verifyUserCanCreateNewEmployee",
@@ -187,30 +188,6 @@ public class EmployeeTest extends BaseTest {
         list.verifyRowWasUpdated(lastName, updatedFirstName, updatedEmployeeId);
 
         checkpoint("09-update-persisted-after-navigation");
-    }
-
-    private PimEmployeeListPage.EmployeeRow pickSeedOfferedByAutocomplete() {
-        for (PimEmployeeListPage.EmployeeRow candidate : pickSearchableEmployees(list.getAllRows())) {
-            if (list.setEmployeeNameFilter(candidate.fullName())) {
-                return candidate;
-            }
-            list.open();
-        }
-        throw new AssertionError("No existing employee could be located through the name autocomplete");
-    }
-
-    private List<PimEmployeeListPage.EmployeeRow> pickSearchableEmployees(
-            List<PimEmployeeListPage.EmployeeRow> rows) {
-        List<PimEmployeeListPage.EmployeeRow> candidates = rows.stream()
-                .filter(row -> row.lastName().matches("[A-Za-z]{3,}"))
-                .filter(row -> row.firstAndMiddleName().matches("[A-Za-z][A-Za-z ]{2,}"))
-                .limit(5)
-                .toList();
-        if (candidates.isEmpty()) {
-            throw new SkipException(
-                    "No employee with an alphabetic name exists in this environment to search for.");
-        }
-        return candidates;
     }
 
     @Test(priority = 8, groups = {"regression"},
