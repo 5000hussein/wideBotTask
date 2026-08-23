@@ -8,20 +8,7 @@ import org.testng.ITestResult;
 
 public class TestListener implements ITestListener {
     @Override
-    public void onTestStart(ITestResult result) {
-        Allure.getLifecycle().updateTestCase(testResult ->
-                testResult.setDescription(describe(result)));
-    }
-
-    @Override
-    public void onTestSuccess(ITestResult result) {
-        attachDuration(result);
-    }
-
-    @Override
     public void onTestFailure(ITestResult result) {
-        attachDuration(result);
-
         String testName = result.getMethod().getMethodName();
         ScreenshotUtil.attachPageContext();
         ScreenshotUtil.captureFailure(testName);
@@ -35,7 +22,6 @@ public class TestListener implements ITestListener {
 
     @Override
     public void onTestSkipped(ITestResult result) {
-        attachDuration(result);
         Throwable cause = result.getThrowable();
         Allure.addAttachment("Skip reason", "text/plain",
                 cause == null ? "Skipped by dependency or configuration failure" : String.valueOf(cause.getMessage()));
@@ -48,16 +34,5 @@ public class TestListener implements ITestListener {
                 context.getPassedTests().size(),
                 context.getFailedTests().size(),
                 context.getSkippedTests().size());
-    }
-
-    private void attachDuration(ITestResult result) {
-        long millis = result.getEndMillis() - result.getStartMillis();
-        Allure.parameter("Duration", millis + " ms");
-    }
-
-    private String describe(ITestResult result) {
-        return result.getMethod().getDescription() == null
-                ? result.getMethod().getMethodName()
-                : result.getMethod().getDescription();
     }
 }
