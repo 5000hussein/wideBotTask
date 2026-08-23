@@ -83,12 +83,8 @@ public class LoginPage extends BasePage {
 
     @Step("Attempt login as {username} expecting rejection")
     public void loginExpectingFailure(String username, String password) {
-        if (!username.isEmpty()) {
-            enterUsername(username);
-        }
-        if (!password.isEmpty()) {
-            enterPassword(password);
-        }
+        enterUsername(username);
+        enterPassword(password);
         submit();
     }
 

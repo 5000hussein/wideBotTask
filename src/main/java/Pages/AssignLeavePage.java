@@ -21,9 +21,6 @@ public class AssignLeavePage extends BasePage {
     private final By toDateField = inputByLabel("To Date");
     private final By commentsField = By.cssSelector("textarea.oxd-textarea");
     private final By assignButton = By.cssSelector("button[type='submit']");
-    private final By leaveBalanceValue = By.xpath(
-            "//div[contains(@class,'oxd-input-group')][.//label[contains(normalize-space(),'Leave Balance')]]"
-                    + "//p[contains(@class,'orangehrm-leave-balance')]");
 
     private final By confirmationOkButton = By.xpath(
             "//div[contains(@class,'oxd-dialog-container')]//button[normalize-space()='Ok']");
@@ -67,12 +64,6 @@ public class AssignLeavePage extends BasePage {
     @Step("Add comment")
     public void setComment(String comment) {
         ElementsActions.clearAndEnterText(driver, commentsField, comment);
-    }
-
-    public String getLeaveBalance() {
-        return Waits.isElementVisible(driver, leaveBalanceValue, 8)
-                ? ElementsActions.getText(driver, leaveBalanceValue)
-                : "";
     }
 
     @Step("Submit the leave assignment")

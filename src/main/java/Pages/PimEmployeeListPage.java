@@ -78,10 +78,6 @@ public class PimEmployeeListPage extends BasePage {
         return ElementsActions.getOxdDropdownRealOptions(driver, employmentStatusDropdown);
     }
 
-    public List<String> getAvailableSubUnits() {
-        return ElementsActions.getOxdDropdownRealOptions(driver, subUnitDropdown);
-    }
-
     @Step("Run the search")
     public void clickSearch() {
         ElementsActions.dismissToast(driver);
@@ -192,9 +188,6 @@ public class PimEmployeeListPage extends BasePage {
 
     public record EmployeeRow(String id, String firstAndMiddleName, String lastName,
                               String employmentStatus, String subUnit) {
-        public String fullName() {
-            return (firstAndMiddleName + " " + lastName).trim();
-        }
     }
 
     //PageAssertions
