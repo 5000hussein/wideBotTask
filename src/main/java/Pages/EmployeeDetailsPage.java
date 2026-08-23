@@ -11,6 +11,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class EmployeeDetailsPage extends BasePage {
+    private static final String PATH = "/web/index.php/pim/viewPersonalDetails/empNumber/";
+
     //Locators
     private final By firstNameField = By.name("firstName");
     private final By middleNameField = By.name("middleName");
@@ -25,6 +27,13 @@ public class EmployeeDetailsPage extends BasePage {
     private final By personalDetailsHeading = By.xpath("//h6[normalize-space()='Personal Details']");
 
     //PageActions
+    @Step("Open the employee record {empNumber}")
+    public void open(String empNumber) {
+        openPath(PATH + empNumber);
+        waitForRecordToLoad();
+        verifyEmployeeDetailsPageLoaded();
+    }
+
     @Step("Wait for the employee record to finish loading")
     public void waitForRecordToLoad() {
         Waits.retryOnStale(driver, d -> {

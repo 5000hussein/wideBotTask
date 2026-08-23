@@ -35,6 +35,8 @@ public class PimEmployeeListPage extends BasePage {
             "//div[contains(@class,'oxd-toast')][contains(.,'No Records Found')]"
                     + " | //span[contains(normalize-space(),'No Records Found')]");
 
+    private static final int RESET_COUNT_TOLERANCE = 25;
+
     private static final int COL_ID = 1;
     private static final int COL_FIRST_MIDDLE_NAME = 2;
     private static final int COL_LAST_NAME = 3;
@@ -196,6 +198,53 @@ public class PimEmployeeListPage extends BasePage {
     }
 
     //PageAssertions
+    @Step("Narrow the list with a filter, reset it, and verify the full set returns")
+    public void verifyResetRestoresFullResultSet() {
+        int unfilteredTotal = getRecordCount();
+        Validations.validateTrue(unfilteredTotal > 0, "The unfiltered list should report a record count");
+
+        String excludedLastName = getAllRows().stream()
+                .map(EmployeeRow::lastName)
+                .filter(name -> !name.isBlank())
+                .findFirst()
+                .orElse("");
+
+        int filteredTotal = narrowWithAnyStatus(unfilteredTotal);
+        clickReset();
+
+        Validations.validateEquals(getSelectedEmploymentStatus(), "-- Select --",
+                "Reset should clear the Employment Status criterion");
+
+        int afterReset = getRecordCount();
+        Validations.validateTrue(afterReset > filteredTotal,
+                "Reset should return more records (" + afterReset + ") than the filtered set ("
+                        + filteredTotal + ")");
+
+        int drift = Math.abs(afterReset - unfilteredTotal);
+        Validations.validateTrue(drift <= RESET_COUNT_TOLERANCE,
+                "Reset should restore the unfiltered result set: expected about " + unfilteredTotal
+                        + " but found " + afterReset + " (drift of " + drift
+                        + " exceeds the " + RESET_COUNT_TOLERANCE + " allowed for concurrent activity)");
+
+        if (!excludedLastName.isBlank()) {
+            Validations.validateTrue(findRowByLastName(excludedLastName).isPresent(),
+                    "The employee '" + excludedLastName + "' excluded by the filter should be listed again");
+        }
+    }
+
+    private int narrowWithAnyStatus(int unfilteredTotal) {
+        for (String status : getAvailableEmploymentStatuses()) {
+            setEmploymentStatusFilter(status);
+            clickSearch();
+
+            int count = getRecordCount();
+            if (count > 0 && count < unfilteredTotal) {
+                return count;
+            }
+            clickReset();
+        }
+        throw new AssertionError("No employment status produced a narrowed result set");
+    }
     @Step("Verify {fullName} is offered by the name autocomplete")
     public void verifyEmployeeIsOffered(String fullName) {
         Validations.validateTrue(setEmployeeNameFilter(fullName),

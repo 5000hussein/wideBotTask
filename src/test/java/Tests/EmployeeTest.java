@@ -3,7 +3,6 @@ package Tests;
 import Pages.AddEmployeePage;
 import Pages.EmployeeDetailsPage;
 import Pages.PimEmployeeListPage;
-import Util.Config;
 import Util.Helper;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
@@ -13,11 +12,6 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 @Epic("OrangeHRM")
 @Feature("PIM - Employee Management")
@@ -33,10 +27,9 @@ public class EmployeeTest extends BaseTest {
     private final String updatedEmployeeId = Helper.getData("updatedEmployeeId");
     private final String updatedFullName = updatedFirstName + " " + middleName + " " + lastName;
 
-    private static final int RESET_COUNT_TOLERANCE = 25;
-
     private AddEmployeePage addEmployee;
     private PimEmployeeListPage list;
+    private EmployeeDetailsPage details;
     private String empNumber;
 
     @BeforeClass(alwaysRun = true, dependsOnMethods = "setUp")
@@ -45,6 +38,7 @@ public class EmployeeTest extends BaseTest {
 
         addEmployee = new AddEmployeePage();
         list = new PimEmployeeListPage();
+        details = new EmployeeDetailsPage();
     }
 
     @Test(priority = 1, groups = {"smoke", "regression"},
@@ -62,7 +56,6 @@ public class EmployeeTest extends BaseTest {
         registerForCleanup(lastName);
         addEmployee.verifySaveWasConfirmed();
 
-        EmployeeDetailsPage details = new EmployeeDetailsPage();
         details.waitForRecordToLoad();
         empNumber = details.verifyEmpNumberAssigned();
         details.verifyRecordShows(firstName, employeeId);
@@ -121,7 +114,6 @@ public class EmployeeTest extends BaseTest {
         list.clickSearch();
         list.openEmployeeByLastName(lastName);
 
-        EmployeeDetailsPage details = new EmployeeDetailsPage();
         details.waitForRecordToLoad();
         details.verifyEmployeeDetailsPageLoaded();
         details.verifyOpenedRecordIs(empNumber);
@@ -138,7 +130,7 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 5: change first name and employee id to new values, save, and verify both the "
             + "success notification and the values on screen.")
     public void verifyUserCanEditEmployeeInformation() {
-        EmployeeDetailsPage details = openCreatedEmployeeRecord();
+        details.open(empNumber);
         details.verifyEditChangesValues(updatedFirstName, updatedEmployeeId);
 
         details.setFirstName(updatedFirstName);
@@ -158,7 +150,7 @@ public class EmployeeTest extends BaseTest {
     @Severity(SeverityLevel.CRITICAL)
     @Description("Step 6a: reload the record and confirm the edit did not revert.")
     public void verifyUpdatedInformationSurvivesRefresh() {
-        EmployeeDetailsPage details = openCreatedEmployeeRecord();
+        details.open(empNumber);
         details.reload();
 
         details.verifyRecordShows(updatedFirstName, updatedEmployeeId);
@@ -174,7 +166,7 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 6b: leave the employee record entirely, return to it, and confirm the update "
             + "is still there -- including in the employee list, which reads from a different query.")
     public void verifyUpdatedInformationSurvivesNavigationAway() {
-        EmployeeDetailsPage details = openCreatedEmployeeRecord();
+        details.open(empNumber);
         details.navigateAwayAndReturn();
         details.verifyRecordShows(updatedFirstName, updatedEmployeeId);
 
@@ -199,7 +191,6 @@ public class EmployeeTest extends BaseTest {
         checkpoint("10-employee-list-filtered");
     }
 
-
     @Test(priority = 9, groups = {"regression"}, dependsOnMethods = "verifyUserCanFilterEmployeeListByTwoCriteria",
             description = "Clearing the filters restores the full result set")
     @Story("Employee list filtering")
@@ -207,66 +198,8 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 7b: Reset clears every criterion and the unfiltered total returns.")
     public void verifyResetRestoresFullResultSet() {
         list.open();
-        int unfilteredTotal = list.getRecordCount();
-        assertTrue(unfilteredTotal > 0, "The unfiltered list should report a record count");
+        list.verifyResetRestoresFullResultSet();
 
-        String excludedLastName = list.getAllRows().stream()
-                .map(PimEmployeeListPage.EmployeeRow::lastName)
-                .filter(name -> !name.isBlank())
-                .findFirst()
-                .orElse("");
-
-        String chosenStatus = null;
-        int filteredTotal = -1;
-        for (String status : list.getAvailableEmploymentStatuses()) {
-            list.setEmploymentStatusFilter(status);
-            list.clickSearch();
-            int count = list.getRecordCount();
-            if (count > 0 && count < unfilteredTotal) {
-                chosenStatus = status;
-                filteredTotal = count;
-                break;
-            }
-            list.clickReset();
-        }
-        assertNotNull(chosenStatus, "No employment status produced a narrowed result set");
-        assertTrue(filteredTotal < unfilteredTotal,
-                "The filter should return fewer records than the unfiltered list");
-
-        list.clickReset();
-
-        assertEquals(list.getSelectedEmploymentStatus(), "-- Select --",
-                "Reset should clear the Employment Status criterion");
-
-        int afterReset = list.getRecordCount();
-        assertTrue(afterReset > filteredTotal,
-                "Reset should return more records (" + afterReset + ") than the filtered set ("
-                        + filteredTotal + ")");
-
-        int drift = Math.abs(afterReset - unfilteredTotal);
-        assertTrue(drift <= RESET_COUNT_TOLERANCE,
-                "Reset should restore the unfiltered result set: expected about " + unfilteredTotal
-                        + " but found " + afterReset + " (drift of " + drift
-                        + " exceeds the " + RESET_COUNT_TOLERANCE + " allowed for concurrent activity)");
-
-        if (!excludedLastName.isBlank()) {
-            assertTrue(list.findRowByLastName(excludedLastName).isPresent(),
-                    "The employee '" + excludedLastName + "' excluded by the filter should be listed again");
-        }
-
-        System.out.println("Reset: filtered=" + filteredTotal + " -> restored=" + afterReset
-                + " (baseline " + unfilteredTotal + ")");
         checkpoint("11-employee-list-filters-reset");
-    }
-
-
-    private EmployeeDetailsPage openCreatedEmployeeRecord() {
-        driver.get(Config.getInstance().getBaseUrl()
-                + "/web/index.php/pim/viewPersonalDetails/empNumber/" + empNumber);
-        Util.Waits.waitForLoaderToDisappear(driver);
-        EmployeeDetailsPage details = new EmployeeDetailsPage();
-        details.waitForRecordToLoad();
-        details.verifyEmployeeDetailsPageLoaded();
-        return details;
     }
 }
