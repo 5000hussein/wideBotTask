@@ -2,6 +2,7 @@ package Pages;
 
 import Util.Config;
 import Util.ElementsActions;
+import Util.Validations;
 import Util.Waits;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
@@ -93,5 +94,24 @@ public class LoginPage extends BasePage {
 
     public boolean isStillOnLoginPage() {
         return driver.getCurrentUrl().contains("auth/login");
+    }
+
+    //PageAssertions
+    @Step("Verify the login page shows all its controls")
+    public void verifyLoginPageDisplayedWithAllControls() {
+        Validations.validateTrue(isLoginPageDisplayed(),
+                "Login page (title + branding) should be displayed");
+        Validations.validateTrue(isUsernameFieldDisplayed(), "Username field should be available");
+        Validations.validateTrue(isPasswordFieldDisplayed(), "Password field should be available");
+        Validations.validateTrue(isLoginButtonDisplayed(), "Login button should be available");
+        Validations.validateTrue(isLoginButtonEnabled(), "Login button should be enabled");
+    }
+
+    @Step("Verify the login was rejected with {expectedMessage}")
+    public void verifyLoginRejectedWith(String expectedMessage) {
+        Validations.validateEquals(getAlertMessage(), expectedMessage,
+                "A clear rejection message should be displayed");
+        Validations.validateTrue(isStillOnLoginPage(),
+                "A rejected login must not reach the application");
     }
 }

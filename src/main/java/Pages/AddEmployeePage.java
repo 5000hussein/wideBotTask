@@ -90,6 +90,46 @@ public class AddEmployeePage extends BasePage {
     }
 
     //PageAssertions
+    @Step("Verify OrangeHRM pre-populates an Employee Id")
+    public void verifyEmployeeIdIsPrefilled() {
+        Validations.validateNotBlank(getPrefilledEmployeeId(),
+                "OrangeHRM should pre-populate a suggested Employee Id");
+    }
+
+    @Step("Verify the save was confirmed")
+    public void verifySaveWasConfirmed() {
+        Validations.validateTrue(wasSaveSuccessful(),
+                "A success notification should be displayed on save");
+        Validations.validateContains(getSaveToastText().toLowerCase(), "success",
+                "Notification should confirm success");
+    }
+
+    @Step("Verify {fieldLabel} was rejected with {expectedMessage}")
+    public void verifyFieldRejectedWith(String fieldLabel, String expectedMessage) {
+        Validations.validateEquals(getFieldErrorFor(fieldLabel), expectedMessage,
+                "A '" + expectedMessage + "' message should be shown against " + fieldLabel);
+        verifySubmissionWasRefused();
+    }
+
+    @Step("Verify {fieldLabel} was rejected with a message explaining the limit")
+    public void verifyFieldRejectedWithLengthMessage(String fieldLabel) {
+        String error = getFieldErrorFor(fieldLabel).toLowerCase();
+        Validations.validateNotBlank(error, "An over-length value should raise a validation message");
+        Validations.validateTrue(error.contains("should not exceed")
+                        || error.contains("required")
+                        || error.contains("invalid"),
+                "Validation should explain the length limit but said: '" + error + "'");
+        verifySubmissionWasRefused();
+    }
+
+    @Step("Verify the submission was refused")
+    public void verifySubmissionWasRefused() {
+        Validations.validateTrue(isStillOnAddEmployeePage(),
+                "The form should not navigate away when validation fails");
+        Validations.validateFalse(isSuccessToastDisplayed(),
+                "No success notification should appear for a rejected submission");
+    }
+
     public void verifyAddEmployeePageLoaded() {
         Validations.validateTrue(
                 ElementsActions.isDisplayed(driver, formHeading)

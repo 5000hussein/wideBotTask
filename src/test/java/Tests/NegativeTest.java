@@ -2,6 +2,7 @@ package Tests;
 
 import Pages.AddEmployeePage;
 import Pages.AssignLeavePage;
+import Pages.DashboardPage;
 import Pages.LoginPage;
 import Pages.PimEmployeeListPage;
 import Util.Config;
@@ -16,16 +17,29 @@ import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
 @Epic("OrangeHRM")
 @Feature("Negative validation")
 public class NegativeTest extends BaseTest {
+    private final String negativeFirstName = Helper.getData("negativeFirstName");
+    private final String negativeLastName = Helper.getData("negativeLastName");
+    private final String overlongFirstName = Helper.getData("overlongFirstName");
+    private final String invalidPassword = Helper.getData("invalidPassword");
+
+    private AddEmployeePage addEmployee;
+    private PimEmployeeListPage list;
+    private AssignLeavePage assign;
+    private LoginPage login;
+    private DashboardPage dashboard;
+
     @BeforeClass(alwaysRun = true, dependsOnMethods = "setUp")
     public void signIn() {
         loginToDashboard();
+
+        addEmployee = new AddEmployeePage();
+        list = new PimEmployeeListPage();
+        assign = new AssignLeavePage();
+        login = new LoginPage();
+        dashboard = new DashboardPage();
     }
 
     @Test(priority = 1, groups = {"negative", "regression"},
@@ -35,29 +49,16 @@ public class NegativeTest extends BaseTest {
     @Description("Example A: submit Add Employee with the required Last Name empty. Expect an inline "
             + "'Required' message, no navigation, and no employee created.")
     public void verifyEmployeeCannotBeCreatedWithoutLastName() {
-        AddEmployeePage addEmployee = new AddEmployeePage();
         addEmployee.open();
-
-        String firstName = Helper.getData("negativeFirstName");
-        addEmployee.enterFirstName(firstName);
+        addEmployee.enterFirstName(negativeFirstName);
         addEmployee.enterLastName("");
         addEmployee.saveExpectingValidationError();
-
-        assertEquals(addEmployee.getFieldErrorFor("Employee Full Name"), "Required",
-                "A 'Required' message should be shown against the name field");
-
-        assertTrue(addEmployee.isStillOnAddEmployeePage(),
-                "The form should not navigate away when validation fails");
-        assertFalse(addEmployee.isSuccessToastDisplayed(),
-                "No success notification should appear for a rejected submission");
+        addEmployee.verifyFieldRejectedWith("Employee Full Name", "Required");
 
         checkpoint("15-negative-required-field");
 
-        PimEmployeeListPage list = new PimEmployeeListPage();
         list.open();
-        assertFalse(list.setEmployeeNameFilter(firstName),
-                "No employee should have been created by the rejected submission, "
-                        + "but the search offered a match for '" + firstName + "'");
+        list.verifyNoEmployeeNamed(negativeFirstName);
     }
 
     @Test(priority = 2, groups = {"negative", "regression"},
@@ -67,26 +68,11 @@ public class NegativeTest extends BaseTest {
     @Description("Example B: enter a first name beyond the field's 30-character limit and expect the "
             + "form to reject it rather than silently truncating or storing it.")
     public void verifyEmployeeCannotBeCreatedWithOverlongFirstName() {
-        AddEmployeePage addEmployee = new AddEmployeePage();
         addEmployee.open();
-
-        String overlongName = Helper.getData("overlongFirstName");
-        addEmployee.enterFirstName(overlongName);
-        addEmployee.enterLastName(Helper.getData("negativeLastName"));
+        addEmployee.enterFirstName(overlongFirstName);
+        addEmployee.enterLastName(negativeLastName);
         addEmployee.saveExpectingValidationError();
-
-        String error = addEmployee.getFieldErrorFor("Employee Full Name");
-        assertFalse(error.isBlank(),
-                "An over-length first name should raise a validation message");
-        assertTrue(error.toLowerCase().contains("should not exceed")
-                        || error.toLowerCase().contains("required")
-                        || error.toLowerCase().contains("invalid"),
-                "Validation should explain the length limit but said: '" + error + "'");
-
-        assertTrue(addEmployee.isStillOnAddEmployeePage(),
-                "Invalid data should not be accepted");
-        assertFalse(addEmployee.isSuccessToastDisplayed(),
-                "No success notification should appear for invalid data");
+        addEmployee.verifyFieldRejectedWithLengthMessage("Employee Full Name");
 
         checkpoint("16-negative-invalid-data");
     }
@@ -99,7 +85,6 @@ public class NegativeTest extends BaseTest {
     @Description("Example C: submit Assign Leave with To Date before From Date and expect the form "
             + "to refuse it.")
     public void verifyLeaveCannotBeAssignedWithEndDateBeforeStartDate() {
-        AssignLeavePage assign = new AssignLeavePage();
         assign.open();
 
         if (assign.isModuleForbidden()) {
@@ -110,18 +95,7 @@ public class NegativeTest extends BaseTest {
 
         assign.setFromDate(Helper.leaveStartDate());
         assign.setToDate(Helper.invalidEndDate());
-
-        String error = assign.getFieldErrorFor("To Date");
-        if (error.isBlank()) {
-            assign.assignExpectingValidationError();
-            error = assign.getFieldErrorFor("To Date");
-        }
-
-        assertFalse(error.isBlank(),
-                "A To Date before the From Date should raise a validation message");
-        assertTrue(assign.isStillOnAssignPage(), "An invalid request should not be submitted");
-        assertFalse(assign.isSuccessToastDisplayed(),
-                "No success notification should appear for an invalid leave request");
+        assign.verifyDateRejected("To Date");
 
         checkpoint("17-negative-invalid-leave-dates");
     }
@@ -133,15 +107,11 @@ public class NegativeTest extends BaseTest {
     @Description("An additional negative scenario: a wrong password is refused, the user stays on "
             + "the login page, and the message does not disclose which field was wrong.")
     public void verifyInvalidCredentialsAreRejected() {
-        new Pages.DashboardPage().logout();
+        dashboard.logout();
 
-        LoginPage login = new LoginPage();
         login.open();
-        login.loginExpectingFailure(Config.getInstance().getUsername(), Helper.getData("invalidPassword"));
-
-        assertEquals(login.getAlertMessage(), "Invalid credentials",
-                "A clear rejection message should be displayed");
-        assertTrue(login.isStillOnLoginPage(), "A rejected login must not reach the application");
+        login.loginExpectingFailure(Config.getInstance().getUsername(), invalidPassword);
+        login.verifyLoginRejectedWith("Invalid credentials");
 
         checkpoint("18-negative-invalid-credentials");
 

@@ -2,6 +2,7 @@ package Pages;
 
 import Util.Helper;
 import Util.ElementsActions;
+import Util.Validations;
 import Util.Waits;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
@@ -131,5 +132,25 @@ public class LeaveListPage extends BasePage {
 
     public record LeaveRow(String employeeName, String leaveType,
                            String numberOfDays, String status) {
+    }
+
+    //PageAssertions
+    @Step("Verify {fullName} can be filtered on")
+    public void verifyEmployeeIsSelectable(String fullName) {
+        Validations.validateTrue(setEmployeeFilter(fullName),
+                "The employee should be selectable on the Leave List filter");
+    }
+
+    @Step("Verify the stored leave for {lastName} is {expectedType} over {expectedDays} days")
+    public void verifyStoredLeave(String lastName, String expectedType, String expectedDays) {
+        LeaveRow leave = findRowByEmployeeRetrying(lastName)
+                .orElseThrow(() -> new AssertionError(
+                        "The submitted leave request should be findable for " + lastName));
+
+        Validations.validateContains(leave.leaveType(), expectedType,
+                "The stored leave type should be '" + expectedType + "'");
+        Validations.validateEquals(leave.numberOfDays(), expectedDays + ".00",
+                "A Monday-to-Wednesday request should be " + expectedDays + " days");
+        Validations.validateNotBlank(leave.status(), "The request should carry a status");
     }
 }

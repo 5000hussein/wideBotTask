@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -38,13 +37,18 @@ public class EmployeeTest extends BaseTest {
     private final String updatedEmployeeId = Helper.getData("updatedEmployeeId");
     private final String updatedFullName = updatedFirstName + " " + middleName + " " + lastName;
 
-    private String empNumber;
-
     private static final int RESET_COUNT_TOLERANCE = 25;
+
+    private AddEmployeePage addEmployee;
+    private PimEmployeeListPage list;
+    private String empNumber;
 
     @BeforeClass(alwaysRun = true, dependsOnMethods = "setUp")
     public void signIn() {
         loginToDashboard();
+
+        addEmployee = new AddEmployeePage();
+        list = new PimEmployeeListPage();
     }
 
     @Test(priority = 1, groups = {"smoke", "regression"},
@@ -54,45 +58,145 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 2: an employee that already exists is located by name and every returned row "
             + "is verified against the search criteria.")
     public void verifyUserCanSearchForAnExistingEmployee() {
-        PimEmployeeListPage list = new PimEmployeeListPage();
         list.open();
         list.verifyEmployeeListPageLoaded();
 
-        int totalBefore = list.getRecordCount();
-        assertTrue(totalBefore > 0, "The environment should contain employees to search for");
-
-        PimEmployeeListPage.EmployeeRow seed = null;
-        for (PimEmployeeListPage.EmployeeRow candidate : pickSearchableEmployees(list.getAllRows())) {
-            if (list.setEmployeeNameFilter(candidate.fullName())) {
-                seed = candidate;
-                break;
-            }
-            System.out.println("Seed candidate not offered by the autocomplete, trying the next: "
-                    + candidate.fullName());
-            list.open();
-        }
-        assertNotNull(seed, "No existing employee could be located through the name autocomplete");
-        String seedFullName = seed.fullName();
+        int totalBefore = list.verifyListHasRecords();
+        PimEmployeeListPage.EmployeeRow seed = pickSeedOfferedByAutocomplete();
 
         list.clickSearch();
-
-        List<PimEmployeeListPage.EmployeeRow> results = list.getAllRows();
-        assertFalse(results.isEmpty(), "Search results should be displayed for '" + seedFullName + "'");
-        assertTrue(list.getRecordCount() < totalBefore,
-                "A name filter should narrow the result set below the unfiltered total");
-
-        for (PimEmployeeListPage.EmployeeRow row : results) {
-            assertEquals(row.lastName(), seed.lastName(),
-                    "Every returned row should carry the searched last name");
-        }
-        Optional<PimEmployeeListPage.EmployeeRow> found = list.findRowByLastName(seed.lastName());
-        assertTrue(found.isPresent(), "The searched employee should be present in the results");
-
-        assertEquals(found.get().firstAndMiddleName(), seed.firstAndMiddleName(),
-                "First (& middle) name should match the record that was searched for");
-        assertEquals(found.get().id(), seed.id(), "Employee Id should match");
+        list.verifyEveryRowMatches(seed.lastName(), totalBefore);
+        list.verifyRowMatches(seed.lastName(), seed.id(), seed.firstAndMiddleName());
 
         checkpoint("03-employee-search-results");
+    }
+
+    @Test(priority = 2, groups = {"smoke", "regression"},
+            description = "A new employee is created from data held in data.json")
+    @Story("Employee creation")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Step 3: create an employee and verify the success notification and the employee id.")
+    public void verifyUserCanCreateNewEmployee() {
+        addEmployee.open();
+        addEmployee.verifyAddEmployeePageLoaded();
+        addEmployee.verifyEmployeeIdIsPrefilled();
+
+        addEmployee.fillForm(firstName, middleName, lastName, employeeId);
+        addEmployee.save();
+        registerForCleanup(lastName);
+        addEmployee.verifySaveWasConfirmed();
+
+        EmployeeDetailsPage details = new EmployeeDetailsPage();
+        details.waitForRecordToLoad();
+        empNumber = details.verifyEmpNumberAssigned();
+        details.verifyRecordShows(firstName, employeeId);
+
+        checkpoint("04-employee-created");
+        details.dismissToast();
+    }
+
+    @Test(priority = 3, groups = {"regression"}, dependsOnMethods = "verifyUserCanCreateNewEmployee",
+            description = "The created employee can be found again in the employee list")
+    @Story("Employee creation is persisted")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Step 4a: prove persistence by finding the new employee through the employee list, "
+            + "not by trusting the creation toast.")
+    public void verifyCreatedEmployeeIsFoundInEmployeeList() {
+        list.open();
+        list.verifyEmployeeIsOffered(fullName);
+        list.clickSearch();
+
+        list.verifyExactlyOneRecordFound();
+        list.verifyRowMatches(lastName, employeeId, firstAndMiddleName);
+
+        checkpoint("05-created-employee-in-list");
+    }
+
+    @Test(priority = 4, groups = {"regression"}, dependsOnMethods = "verifyCreatedEmployeeIsFoundInEmployeeList",
+            description = "The created employee record opens and shows the data it was created with")
+    @Story("Employee creation is persisted")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Step 4b: open the record from the list and verify name, employee id and that the "
+            + "detail tabs are reachable.")
+    public void verifyCreatedEmployeeRecordShowsCorrectDetails() {
+        list.open();
+        list.setEmployeeNameFilter(fullName);
+        list.clickSearch();
+        list.openEmployeeByLastName(lastName);
+
+        EmployeeDetailsPage details = new EmployeeDetailsPage();
+        details.waitForRecordToLoad();
+        details.verifyEmployeeDetailsPageLoaded();
+        details.verifyOpenedRecordIs(empNumber);
+        details.verifyRecordHolds(firstName, middleName, lastName, employeeId);
+        details.verifyTabsAreAvailable("Job", "Contact Details");
+
+        checkpoint("06-created-employee-record");
+    }
+
+    @Test(priority = 5, groups = {"regression"}, dependsOnMethods = "verifyCreatedEmployeeRecordShowsCorrectDetails",
+            description = "Employee fields can be edited and the update is confirmed")
+    @Story("Employee edit")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Step 5: change first name and employee id to new values, save, and verify both the "
+            + "success notification and the values on screen.")
+    public void verifyUserCanEditEmployeeInformation() {
+        EmployeeDetailsPage details = openCreatedEmployeeRecord();
+        details.verifyEditChangesValues(updatedFirstName, updatedEmployeeId);
+
+        details.setFirstName(updatedFirstName);
+        details.setEmployeeId(updatedEmployeeId);
+        details.savePersonalDetails();
+        details.verifyUpdateConfirmed();
+
+        details.dismissToast();
+        details.verifyRecordShows(updatedFirstName, updatedEmployeeId);
+
+        checkpoint("07-employee-updated");
+    }
+
+    @Test(priority = 6, groups = {"regression"}, dependsOnMethods = "verifyUserCanEditEmployeeInformation",
+            description = "The updated values survive a page refresh")
+    @Story("Employee edit is persisted")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Step 6a: reload the record and confirm the edit did not revert.")
+    public void verifyUpdatedInformationSurvivesRefresh() {
+        EmployeeDetailsPage details = openCreatedEmployeeRecord();
+        details.reload();
+
+        details.verifyRecordShows(updatedFirstName, updatedEmployeeId);
+        details.verifyRecordDidNotRevertTo(firstName);
+
+        checkpoint("08-update-persisted-after-refresh");
+    }
+
+    @Test(priority = 7, groups = {"regression"}, dependsOnMethods = "verifyUpdatedInformationSurvivesRefresh",
+            description = "The updated values survive navigating away and back")
+    @Story("Employee edit is persisted")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Step 6b: leave the employee record entirely, return to it, and confirm the update "
+            + "is still there -- including in the employee list, which reads from a different query.")
+    public void verifyUpdatedInformationSurvivesNavigationAway() {
+        EmployeeDetailsPage details = openCreatedEmployeeRecord();
+        details.navigateAwayAndReturn();
+        details.verifyRecordShows(updatedFirstName, updatedEmployeeId);
+
+        list.open();
+        list.setEmployeeNameFilter(updatedFullName);
+        list.clickSearch();
+        list.verifyRowWasUpdated(lastName, updatedFirstName, updatedEmployeeId);
+
+        checkpoint("09-update-persisted-after-navigation");
+    }
+
+    private PimEmployeeListPage.EmployeeRow pickSeedOfferedByAutocomplete() {
+        for (PimEmployeeListPage.EmployeeRow candidate : pickSearchableEmployees(list.getAllRows())) {
+            if (list.setEmployeeNameFilter(candidate.fullName())) {
+                return candidate;
+            }
+            list.open();
+        }
+        throw new AssertionError("No existing employee could be located through the name autocomplete");
     }
 
     private List<PimEmployeeListPage.EmployeeRow> pickSearchableEmployees(
@@ -109,190 +213,6 @@ public class EmployeeTest extends BaseTest {
         return candidates;
     }
 
-    @Test(priority = 2, groups = {"smoke", "regression"},
-            description = "A new employee is created from generated data")
-    @Story("Employee creation")
-    @Severity(SeverityLevel.BLOCKER)
-    @Description("Step 3: create an employee with runtime-generated data and verify the success "
-            + "notification and the generated employee id.")
-    public void verifyUserCanCreateNewEmployee() {
-        AddEmployeePage addEmployee = new AddEmployeePage();
-        addEmployee.open();
-        addEmployee.verifyAddEmployeePageLoaded();
-
-        String prefilledId = addEmployee.getPrefilledEmployeeId();
-        assertFalse(prefilledId.isBlank(), "OrangeHRM should pre-populate a suggested Employee Id");
-
-        addEmployee.fillForm(firstName, middleName, lastName, employeeId);
-        addEmployee.save();
-        registerForCleanup(lastName);
-
-        assertTrue(addEmployee.wasSaveSuccessful(),
-                "A success notification should be displayed on save");
-        assertTrue(addEmployee.getSaveToastText().toLowerCase().contains("success"),
-                "Notification should confirm success but was: '"
-                        + addEmployee.getSaveToastText() + "'");
-
-        EmployeeDetailsPage details = new EmployeeDetailsPage();
-        details.waitForRecordToLoad();
-
-        empNumber = details.getEmpNumberFromUrl();
-        assertFalse(empNumber.isBlank(),
-                "The created record should have a server-assigned employee number in its URL");
-        assertEquals(details.getEmployeeId(), employeeId,
-                "The Employee Id we supplied should be stored on the record");
-
-        checkpoint("04-employee-created");
-        details.dismissToast();
-    }
-
-    @Test(priority = 3, groups = {"regression"}, dependsOnMethods = "verifyUserCanCreateNewEmployee",
-            description = "The created employee can be found again in the employee list")
-    @Story("Employee creation is persisted")
-    @Severity(SeverityLevel.CRITICAL)
-    @Description("Step 4a: prove persistence by finding the new employee through the employee list, "
-            + "not by trusting the creation toast.")
-    public void verifyCreatedEmployeeIsFoundInEmployeeList() {
-        PimEmployeeListPage list = new PimEmployeeListPage();
-        list.open();
-
-        assertTrue(list.setEmployeeNameFilter(fullName),
-                "The new employee should be offered by the name autocomplete");
-        list.clickSearch();
-
-        assertEquals(list.getRecordCount(), 1,
-                "The generated name is unique, so exactly one record should match");
-
-        Optional<PimEmployeeListPage.EmployeeRow> row = list.findRowByLastName(lastName);
-        assertTrue(row.isPresent(), "The created employee should appear in the employee list");
-        assertEquals(row.get().id(), employeeId, "Employee Id should match what was entered");
-        assertEquals(row.get().firstAndMiddleName(), firstAndMiddleName,
-                "First (& middle) name should match what was entered");
-
-        checkpoint("05-created-employee-in-list");
-    }
-
-    @Test(priority = 4, groups = {"regression"}, dependsOnMethods = "verifyCreatedEmployeeIsFoundInEmployeeList",
-            description = "The created employee record opens and shows the data it was created with")
-    @Story("Employee creation is persisted")
-    @Severity(SeverityLevel.CRITICAL)
-    @Description("Step 4b: open the record from the list and verify name, employee id and that the "
-            + "detail tabs are reachable.")
-    public void verifyCreatedEmployeeRecordShowsCorrectDetails() {
-        PimEmployeeListPage list = new PimEmployeeListPage();
-        list.open();
-        list.setEmployeeNameFilter(fullName);
-        list.clickSearch();
-
-        list.openEmployeeByLastName(lastName);
-
-        EmployeeDetailsPage details = new EmployeeDetailsPage();
-        details.waitForRecordToLoad();
-
-        details.verifyEmployeeDetailsPageLoaded();
-        assertEquals(details.getEmpNumberFromUrl(), empNumber,
-                "Opening from the list should reach the same record that creation returned");
-
-        assertEquals(details.getFirstName(), firstName, "First name should match");
-        assertEquals(details.getMiddleName(), middleName, "Middle name should match");
-        assertEquals(details.getLastName(), lastName, "Last name should match");
-
-        assertEquals(details.getEmployeeId(), employeeId, "Employee Id should be populated");
-
-        String banner = details.getDisplayedName();
-        assertTrue(banner.contains(firstName) && banner.contains(lastName),
-                "The record header should show the employee's name but was: '" + banner + "'");
-
-        assertTrue(details.isTabAvailable("Job"), "The Job tab should be accessible");
-        assertTrue(details.isTabAvailable("Contact Details"), "The Contact Details tab should be accessible");
-
-        checkpoint("06-created-employee-record");
-    }
-
-    @Test(priority = 5, groups = {"regression"}, dependsOnMethods = "verifyCreatedEmployeeRecordShowsCorrectDetails",
-            description = "Employee fields can be edited and the update is confirmed")
-    @Story("Employee edit")
-    @Severity(SeverityLevel.CRITICAL)
-    @Description("Step 5: change first name and employee id to new values, save, and verify both the "
-            + "success notification and the values on screen.")
-    public void verifyUserCanEditEmployeeInformation() {
-        EmployeeDetailsPage details = openCreatedEmployeeRecord();
-
-        String originalFirstName = details.getFirstName();
-        String originalEmployeeId = details.getEmployeeId();
-
-        assertNotEquals(updatedFirstName, originalFirstName,
-                "The edit must use a value different from the original");
-        assertNotEquals(updatedEmployeeId, originalEmployeeId,
-                "The edit must use an employee id different from the original");
-
-        details.setFirstName(updatedFirstName);
-        details.setEmployeeId(updatedEmployeeId);
-        details.savePersonalDetails();
-
-        assertTrue(details.wasLastActionSuccessful(), "A success notification should confirm the update");
-        assertTrue(details.getLastToastText().toLowerCase().contains("success"),
-                "Update notification should confirm success but was: '" + details.getLastToastText() + "'");
-
-        details.dismissToast();
-
-        assertEquals(details.getFirstName(), updatedFirstName,
-                "The updated first name should be visible after saving");
-        assertEquals(details.getEmployeeId(), updatedEmployeeId,
-                "The updated employee id should be visible after saving");
-
-        checkpoint("07-employee-updated");
-    }
-
-    @Test(priority = 6, groups = {"regression"}, dependsOnMethods = "verifyUserCanEditEmployeeInformation",
-            description = "The updated values survive a page refresh")
-    @Story("Employee edit is persisted")
-    @Severity(SeverityLevel.CRITICAL)
-    @Description("Step 6a: reload the record and confirm the edit did not revert.")
-    public void verifyUpdatedInformationSurvivesRefresh() {
-        EmployeeDetailsPage details = openCreatedEmployeeRecord();
-        details.reload();
-
-        assertEquals(details.getFirstName(), updatedFirstName,
-                "The updated first name should survive a refresh");
-        assertEquals(details.getEmployeeId(), updatedEmployeeId,
-                "The updated employee id should survive a refresh");
-        assertNotEquals(details.getFirstName(), firstName,
-                "The record must not revert to its pre-edit first name");
-
-        checkpoint("08-update-persisted-after-refresh");
-    }
-
-    @Test(priority = 7, groups = {"regression"}, dependsOnMethods = "verifyUpdatedInformationSurvivesRefresh",
-            description = "The updated values survive navigating away and back")
-    @Story("Employee edit is persisted")
-    @Severity(SeverityLevel.CRITICAL)
-    @Description("Step 6b: leave the employee record entirely, return to it, and confirm the update "
-            + "is still there -- including in the employee list, which reads from a different query.")
-    public void verifyUpdatedInformationSurvivesNavigationAway() {
-        EmployeeDetailsPage details = openCreatedEmployeeRecord();
-        details.navigateAwayAndReturn();
-
-        assertEquals(details.getFirstName(), updatedFirstName,
-                "The updated first name should still be present after navigating away and back");
-        assertEquals(details.getEmployeeId(), updatedEmployeeId,
-                "The updated employee id should still be present after navigating away and back");
-
-        PimEmployeeListPage list = new PimEmployeeListPage();
-        list.open();
-        list.setEmployeeNameFilter(updatedFullName);
-        list.clickSearch();
-
-        Optional<PimEmployeeListPage.EmployeeRow> row = list.findRowByLastName(lastName);
-        assertTrue(row.isPresent(), "The edited employee should still be findable in the employee list");
-        assertEquals(row.get().id(), updatedEmployeeId,
-                "The employee list should report the updated employee id");
-        assertTrue(row.get().firstAndMiddleName().contains(updatedFirstName),
-                "The employee list should report the updated first name");
-
-        checkpoint("09-update-persisted-after-navigation");
-    }
-
     @Test(priority = 8, groups = {"regression"},
             description = "Two filter criteria applied together return only matching data")
     @Story("Employee list filtering")
@@ -300,7 +220,6 @@ public class EmployeeTest extends BaseTest {
     @Description("Step 7a: filter by Employment Status AND Job Title, then verify the DATA in every "
             + "returned row honours both criteria.")
     public void verifyUserCanFilterEmployeeListByTwoCriteria() {
-        PimEmployeeListPage list = new PimEmployeeListPage();
         list.open();
 
         List<String> statuses = list.getAvailableEmploymentStatuses();
@@ -401,7 +320,6 @@ public class EmployeeTest extends BaseTest {
     @Severity(SeverityLevel.NORMAL)
     @Description("Step 7b: Reset clears every criterion and the unfiltered total returns.")
     public void verifyResetRestoresFullResultSet() {
-        PimEmployeeListPage list = new PimEmployeeListPage();
         list.open();
         int unfilteredTotal = list.getRecordCount();
         assertTrue(unfilteredTotal > 0, "The unfiltered list should report a record count");
@@ -454,6 +372,7 @@ public class EmployeeTest extends BaseTest {
                 + " (baseline " + unfilteredTotal + ")");
         checkpoint("11-employee-list-filters-reset");
     }
+
 
     private EmployeeDetailsPage openCreatedEmployeeRecord() {
         driver.get(Config.getInstance().getBaseUrl()

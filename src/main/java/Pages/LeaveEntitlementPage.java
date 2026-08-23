@@ -1,6 +1,7 @@
 package Pages;
 
 import Util.ElementsActions;
+import Util.Validations;
 import Util.Waits;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
@@ -34,8 +35,12 @@ public class LeaveEntitlementPage extends BasePage {
         ElementsActions.selectFromOxdDropdown(driver, leaveTypeDropdown, leaveType);
     }
 
-    public java.util.List<String> getAvailableLeaveTypes() {
-        return ElementsActions.getOxdDropdownRealOptions(driver, leaveTypeDropdown);
+    @Step("Take the first leave type this environment offers")
+    public String getFirstAvailableLeaveType() {
+        java.util.List<String> types = ElementsActions.getOxdDropdownRealOptions(driver, leaveTypeDropdown);
+        Validations.validateFalse(types.isEmpty(),
+                "The environment should define at least one leave type");
+        return types.get(0);
     }
 
     @Step("Set entitlement to {days} days")
@@ -52,5 +57,19 @@ public class LeaveEntitlementPage extends BasePage {
         }
         captureToast();
         Waits.waitForLoaderToDisappear(driver);
+    }
+
+    //PageAssertions
+    @Step("Verify {fullName} can be entitled")
+    public void verifyEmployeeIsSelectable(String fullName) {
+        Validations.validateTrue(selectEmployee(fullName),
+                "The newly created employee should be selectable for an entitlement");
+    }
+
+    @Step("Verify the entitlement was granted")
+    public void verifyEntitlementGranted() {
+        Validations.validateTrue(wasLastActionSuccessful(),
+                "Granting the entitlement should be confirmed; toast was: '"
+                        + getLastToastText() + "'");
     }
 }

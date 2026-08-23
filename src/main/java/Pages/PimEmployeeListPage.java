@@ -207,6 +207,67 @@ public class PimEmployeeListPage extends BasePage {
     }
 
     //PageAssertions
+    @Step("Verify {fullName} is offered by the name autocomplete")
+    public void verifyEmployeeIsOffered(String fullName) {
+        Validations.validateTrue(setEmployeeNameFilter(fullName),
+                "The employee should be offered by the name autocomplete: " + fullName);
+    }
+
+    @Step("Verify the list holds employees to search for")
+    public int verifyListHasRecords() {
+        int total = getRecordCount();
+        Validations.validateTrue(total > 0, "The environment should contain employees to search for");
+        return total;
+    }
+
+    @Step("Verify exactly one record matched")
+    public void verifyExactlyOneRecordFound() {
+        Validations.validateEquals(getRecordCount(), 1,
+                "The test employee name is unique, so exactly one record should match");
+    }
+
+    @Step("Verify the row for {lastName} holds id {employeeId}")
+    public void verifyRowMatches(String lastName, String employeeId, String firstAndMiddleName) {
+        EmployeeRow row = findRowByLastName(lastName)
+                .orElseThrow(() -> new AssertionError(
+                        "The employee should appear in the employee list: " + lastName));
+
+        Validations.validateEquals(row.id(), employeeId, "Employee Id should match what was entered");
+        Validations.validateEquals(row.firstAndMiddleName(), firstAndMiddleName,
+                "First (& middle) name should match what was entered");
+    }
+
+    @Step("Verify the row for {lastName} reports the updated {firstName} and {employeeId}")
+    public void verifyRowWasUpdated(String lastName, String firstName, String employeeId) {
+        EmployeeRow row = findRowByLastName(lastName)
+                .orElseThrow(() -> new AssertionError(
+                        "The edited employee should still be findable in the employee list: " + lastName));
+
+        Validations.validateEquals(row.id(), employeeId,
+                "The employee list should report the updated employee id");
+        Validations.validateContains(row.firstAndMiddleName(), firstName,
+                "The employee list should report the updated first name");
+    }
+
+    @Step("Verify every result carries the searched last name {lastName}")
+    public void verifyEveryRowMatches(String lastName, int unfilteredTotal) {
+        List<EmployeeRow> results = getAllRows();
+        Validations.validateFalse(results.isEmpty(), "Search results should be displayed for " + lastName);
+        Validations.validateTrue(getRecordCount() < unfilteredTotal,
+                "A name filter should narrow the result set below the unfiltered total");
+
+        for (EmployeeRow row : results) {
+            Validations.validateEquals(row.lastName(), lastName,
+                    "Every returned row should carry the searched last name");
+        }
+    }
+
+    @Step("Verify no employee is offered for {name}")
+    public void verifyNoEmployeeNamed(String name) {
+        Validations.validateFalse(setEmployeeNameFilter(name),
+                "No employee should exist for '" + name + "', but the search offered a match");
+    }
+
     public void verifyEmployeeListPageLoaded() {
         Validations.validateTrue(
                 ElementsActions.isDisplayed(driver, searchButton)

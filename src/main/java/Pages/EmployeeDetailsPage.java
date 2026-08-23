@@ -110,6 +110,66 @@ public class EmployeeDetailsPage extends BasePage {
     }
 
     //PageAssertions
+    @Step("Verify the record holds {firstName} {middleName} {lastName} and id {employeeId}")
+    public void verifyRecordHolds(String firstName, String middleName, String lastName, String employeeId) {
+        Validations.validateEquals(getFirstName(), firstName, "First name should match");
+        Validations.validateEquals(getMiddleName(), middleName, "Middle name should match");
+        Validations.validateEquals(getLastName(), lastName, "Last name should match");
+        Validations.validateEquals(getEmployeeId(), employeeId, "Employee Id should be populated");
+
+        String banner = getDisplayedName();
+        Validations.validateTrue(banner.contains(firstName) && banner.contains(lastName),
+                "The record header should show the employee's name but was: '" + banner + "'");
+    }
+
+    @Step("Verify the record now shows {firstName} and id {employeeId}")
+    public void verifyRecordShows(String firstName, String employeeId) {
+        Validations.validateEquals(getFirstName(), firstName, "First name should be " + firstName);
+        Validations.validateEquals(getEmployeeId(), employeeId, "Employee Id should be " + employeeId);
+    }
+
+    @Step("Verify the pending edit differs from what is on screen")
+    public void verifyEditChangesValues(String newFirstName, String newEmployeeId) {
+        Validations.validateNotEquals(getFirstName(), newFirstName,
+                "The edit must use a value different from the original");
+        Validations.validateNotEquals(getEmployeeId(), newEmployeeId,
+                "The edit must use an employee id different from the original");
+    }
+
+    @Step("Verify the record did not revert to {oldFirstName}")
+    public void verifyRecordDidNotRevertTo(String oldFirstName) {
+        Validations.validateNotEquals(getFirstName(), oldFirstName,
+                "The record must not revert to its pre-edit first name");
+    }
+
+    @Step("Verify the opened record is {expectedEmpNumber}")
+    public void verifyOpenedRecordIs(String expectedEmpNumber) {
+        Validations.validateEquals(getEmpNumberFromUrl(), expectedEmpNumber,
+                "Opening from the list should reach the same record that creation returned");
+    }
+
+    @Step("Verify the record carries a server-assigned employee number")
+    public String verifyEmpNumberAssigned() {
+        String empNumber = getEmpNumberFromUrl();
+        Validations.validateNotBlank(empNumber,
+                "The created record should have a server-assigned employee number in its URL");
+        return empNumber;
+    }
+
+    @Step("Verify the update was confirmed")
+    public void verifyUpdateConfirmed() {
+        Validations.validateTrue(wasLastActionSuccessful(),
+                "A success notification should confirm the update; toast was: '"
+                        + getLastToastText() + "'");
+    }
+
+    @Step("Verify the detail tabs are reachable")
+    public void verifyTabsAreAvailable(String... tabNames) {
+        for (String tabName : tabNames) {
+            Validations.validateTrue(isTabAvailable(tabName), "The " + tabName + " tab should be accessible");
+        }
+    }
+
     public void verifyEmployeeDetailsPageLoaded() {
         Validations.validateTrue(
                 driver.getCurrentUrl().contains("viewPersonalDetails")

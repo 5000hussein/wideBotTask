@@ -1,5 +1,6 @@
 package Pages;
 
+import Util.Validations;
 import Util.Waits;
 import io.qameta.allure.Step;
 import org.openqa.selenium.By;
@@ -37,5 +38,20 @@ public class ApplyLeavePage extends BasePage {
     @Step("Wait until the Apply Leave screen shows the form or the no-balance message")
     public boolean waitForScreenToResolve() {
         return Waits.isElementVisible(driver, screenResolved, 15);
+    }
+
+    //PageAssertions
+    @Step("Verify the Apply screen matches the account's entitlement state")
+    public void verifyScreenMatchesEntitlementState() {
+        Validations.validateTrue(waitForScreenToResolve(),
+                "Apply Leave should render either the request form or the no-balance message");
+
+        if (isNoLeaveBalanceMessageDisplayed()) {
+            Validations.validateFalse(isApplyFormAvailable(),
+                    "The request form must not be offered when there is no balance to spend");
+        } else {
+            Validations.validateTrue(isApplyFormAvailable(),
+                    "An account holding a balance should be offered a usable request form");
+        }
     }
 }
