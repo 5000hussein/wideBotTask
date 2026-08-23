@@ -116,9 +116,6 @@ Layered, so that a UI change touches exactly one layer.
   `dependsOnMethods`. A broken precondition therefore **skips** its dependants rather than
   producing a second, misleading failure.
 - **ThreadLocal driver**, so suites can be parallelised by class without tests sharing a browser.
-- **DOM probes are committed** under `src/test/java/Tools/`. Every locator in this framework was
-  verified against the live DOM by running one, not guessed. They are how the next person
-  re-verifies the app after a UI change.
 
 ---
 
@@ -165,10 +162,9 @@ Layered, so that a UI change touches exactly one layer.
 │   │   ├── EmployeeTest.java        # Steps 2–7
 │   │   ├── LeaveTest.java           # Step 8
 │   │   └── NegativeTest.java        # Step 9
-│   ├── Listeners/
-│   │   ├── TestListener.java        # failure screenshots, durations, page context
-│   │   └── RetryAnalyzer.java       # opt-in, per test
-│   └── Tools/                       # DOM probes (developer tools, not tests)
+│   └── Listeners/
+│       ├── TestListener.java        # failure screenshots, durations, page context
+│       └── RetryAnalyzer.java       # opt-in, per test
 ├── docs/
 │   ├── manual-testing.md
 │   └── bug-report.md
