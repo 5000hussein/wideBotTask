@@ -115,6 +115,7 @@ public class NegativeTest extends BaseTest {
 
         checkpoint("18-negative-invalid-credentials");
 
-        login.loginWithValidCredentials();
+        login.loginAs(Config.getInstance().getUsername(), Config.getInstance().getPassword());
+        dashboard.waitUntilLoaded();
     }
 }

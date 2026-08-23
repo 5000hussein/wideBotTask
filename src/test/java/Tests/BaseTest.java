@@ -42,9 +42,10 @@ public abstract class BaseTest {
     protected DashboardPage loginToDashboard() {
         LoginPage login = new LoginPage();
         login.open();
-        login.loginWithValidCredentials();
+        login.loginAs(Config.getInstance().getUsername(), Config.getInstance().getPassword());
 
         dashboardPage = new DashboardPage();
+        dashboardPage.waitUntilLoaded();
         return dashboardPage;
     }
 

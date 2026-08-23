@@ -1,6 +1,5 @@
 package Pages;
 
-import Util.Config;
 import Util.ElementsActions;
 import Util.Validations;
 import Util.Waits;
@@ -72,13 +71,6 @@ public class LoginPage extends BasePage {
         enterUsername(username);
         enterPassword(password);
         submit();
-    }
-
-    @Step("Log in with the configured credentials and wait for the dashboard")
-    public void loginWithValidCredentials() {
-        loginAs(Config.getInstance().getUsername(), Config.getInstance().getPassword());
-        Waits.waitForUrlContains(driver, "dashboard");
-        Waits.waitForLoaderToDisappear(driver);
     }
 
     public boolean isStillOnLoginPage() {

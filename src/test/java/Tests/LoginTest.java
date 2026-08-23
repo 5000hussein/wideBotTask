@@ -45,7 +45,7 @@ public class LoginTest extends BaseTest {
     @Description("Step 1b: login succeeds, the dashboard renders, and the signed-in user is identified.")
     public void verifyUserCanLoginWithValidCredentials() {
         login.open();
-        login.loginWithValidCredentials();
+        login.loginAs(Config.getInstance().getUsername(), Config.getInstance().getPassword());
         dashboard.verifyDashboardLoadedFor(Config.getInstance().getUsername());
 
         checkpoint("02-dashboard-after-login");

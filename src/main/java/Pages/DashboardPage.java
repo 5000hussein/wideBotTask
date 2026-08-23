@@ -13,6 +13,12 @@ public class DashboardPage extends BasePage {
     private final By logoutMenuItem = By.xpath("//a[normalize-space()='Logout']");
 
     //PageActions
+    @Step("Wait for the dashboard to load")
+    public void waitUntilLoaded() {
+        Waits.waitForUrlContains(driver, "dashboard");
+        Waits.waitForLoaderToDisappear(driver);
+    }
+
     @Step("Verify the dashboard has loaded")
     public boolean isDashboardDisplayed() {
         return Waits.waitForUrlContains(driver, "dashboard/index")
