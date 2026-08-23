@@ -30,10 +30,6 @@ public class DashboardPage extends BasePage {
         return ElementsActions.countElements(driver, dashboardWidget);
     }
 
-    public boolean isLoggedInUserDisplayed() {
-        return isUserMenuDisplayed() && !getLoggedInUserName().isBlank();
-    }
-
     @Step("Log out")
     public void logout() {
         ElementsActions.clickElement(driver, USER_DROPDOWN_TAB);
@@ -49,7 +45,7 @@ public class DashboardPage extends BasePage {
         Validations.validateEquals(getBreadcrumbModule(), "Dashboard",
                 "Top bar should identify the Dashboard module");
         Validations.validateTrue(getWidgetCount() > 0, "Dashboard should render at least one widget");
-        Validations.validateTrue(isLoggedInUserDisplayed(),
+        Validations.validateTrue(isUserMenuDisplayed(),
                 "The signed-in user's menu should be displayed");
         Validations.validateNotBlank(getLoggedInUserName(), "Signed-in user name should not be blank");
         Validations.validateNotEquals(getLoggedInUserName(), loginId,

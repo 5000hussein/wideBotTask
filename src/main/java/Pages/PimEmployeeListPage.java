@@ -111,7 +111,7 @@ public class PimEmployeeListPage extends BasePage {
 
     public int getRecordCount() {
         if (!Waits.isElementVisible(driver, recordsFoundText, 8)) {
-            return isNoRecordsFound() ? 0 : -1;
+            return driver.findElements(tableCard).isEmpty() ? 0 : -1;
         }
         String text = ElementsActions.getText(driver, recordsFoundText);
         Matcher matcher = Pattern.compile("\\((\\d+)\\)").matcher(text);
@@ -119,10 +119,6 @@ public class PimEmployeeListPage extends BasePage {
             return Integer.parseInt(matcher.group(1));
         }
         return text.contains("No Records") ? 0 : -1;
-    }
-
-    public boolean isNoRecordsFound() {
-        return driver.findElements(tableCard).isEmpty();
     }
 
     public List<EmployeeRow> getAllRows() {

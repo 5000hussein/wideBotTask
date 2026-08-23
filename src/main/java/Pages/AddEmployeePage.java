@@ -72,14 +72,6 @@ public class AddEmployeePage extends BasePage {
         Waits.waitForLoaderToDisappear(driver);
     }
 
-    public String getSaveToastText() {
-        return saveToastText;
-    }
-
-    public boolean wasSaveSuccessful() {
-        return saveWasSuccessful;
-    }
-
     @Step("Save expecting a validation failure")
     public void saveExpectingValidationError() {
         ElementsActions.clickElement(driver, saveButton);
@@ -98,9 +90,9 @@ public class AddEmployeePage extends BasePage {
 
     @Step("Verify the save was confirmed")
     public void verifySaveWasConfirmed() {
-        Validations.validateTrue(wasSaveSuccessful(),
+        Validations.validateTrue(saveWasSuccessful,
                 "A success notification should be displayed on save");
-        Validations.validateContains(getSaveToastText().toLowerCase(), "success",
+        Validations.validateContains(saveToastText.toLowerCase(), "success",
                 "Notification should confirm success");
     }
 

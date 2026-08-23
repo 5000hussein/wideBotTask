@@ -74,14 +74,6 @@ public class EmployeeDetailsPage extends BasePage {
         }
     }
 
-    public List<String> getAvailableTabs() {
-        return ElementsActions.getAllTexts(driver, tabs);
-    }
-
-    public boolean isTabAvailable(String tabName) {
-        return getAvailableTabs().stream().anyMatch(tab -> tab.equalsIgnoreCase(tabName));
-    }
-
     @Step("Change first name to {firstName}")
     public void setFirstName(String firstName) {
         ElementsActions.clearAndEnterText(driver, firstNameField, firstName);
@@ -174,8 +166,11 @@ public class EmployeeDetailsPage extends BasePage {
 
     @Step("Verify the detail tabs are reachable")
     public void verifyTabsAreAvailable(String... tabNames) {
+        List<String> available = ElementsActions.getAllTexts(driver, tabs);
         for (String tabName : tabNames) {
-            Validations.validateTrue(isTabAvailable(tabName), "The " + tabName + " tab should be accessible");
+            Validations.validateTrue(
+                    available.stream().anyMatch(tab -> tab.equalsIgnoreCase(tabName)),
+                    "The " + tabName + " tab should be accessible");
         }
     }
 

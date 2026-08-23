@@ -35,15 +35,10 @@ public class ApplyLeavePage extends BasePage {
                 && Waits.isElementVisible(driver, applyButton, 5);
     }
 
-    @Step("Wait until the Apply Leave screen shows the form or the no-balance message")
-    public boolean waitForScreenToResolve() {
-        return Waits.isElementVisible(driver, screenResolved, 15);
-    }
-
     //PageAssertions
     @Step("Verify the Apply screen matches the account's entitlement state")
     public void verifyScreenMatchesEntitlementState() {
-        Validations.validateTrue(waitForScreenToResolve(),
+        Validations.validateTrue(Waits.isElementVisible(driver, screenResolved, 15),
                 "Apply Leave should render either the request form or the no-balance message");
 
         if (isNoLeaveBalanceMessageDisplayed()) {

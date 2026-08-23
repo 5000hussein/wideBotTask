@@ -107,17 +107,13 @@ public class LeaveListPage extends BasePage {
         });
     }
 
-    public Optional<LeaveRow> findRowByEmployee(String employeeNameFragment) {
-        return getAllRows().stream()
-                .filter(row -> row.employeeName().toLowerCase()
-                        .contains(employeeNameFragment.toLowerCase()))
-                .findFirst();
-    }
-
     @Step("Locate leave for {employeeNameFragment}")
-    public Optional<LeaveRow> findRowByEmployeeRetrying(String employeeNameFragment) {
+    private Optional<LeaveRow> findRowByEmployeeRetrying(String employeeNameFragment) {
         for (int attempt = 1; attempt <= 3; attempt++) {
-            Optional<LeaveRow> row = findRowByEmployee(employeeNameFragment);
+            Optional<LeaveRow> row = getAllRows().stream()
+                    .filter(r -> r.employeeName().toLowerCase()
+                            .contains(employeeNameFragment.toLowerCase()))
+                    .findFirst();
             if (row.isPresent()) {
                 return row;
             }
