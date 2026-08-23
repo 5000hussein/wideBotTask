@@ -110,7 +110,7 @@ public class NegativeTest extends BaseTest {
         dashboard.logout();
 
         login.open();
-        login.loginExpectingFailure(Config.getInstance().getUsername(), invalidPassword);
+        login.loginAs(Config.getInstance().getUsername(), invalidPassword);
         login.verifyLoginRejectedWith("Invalid credentials");
 
         checkpoint("18-negative-invalid-credentials");

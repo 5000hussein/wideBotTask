@@ -67,25 +67,18 @@ public class LoginPage extends BasePage {
         ElementsActions.clickElement(driver, loginButton);
     }
 
-    @Step("Log in with the configured credentials")
-    public void loginWithValidCredentials() {
-        loginAs(Config.getInstance().getUsername(), Config.getInstance().getPassword());
-    }
-
     @Step("Log in as {username}")
     public void loginAs(String username, String password) {
         enterUsername(username);
         enterPassword(password);
         submit();
-        Waits.waitForUrlContains(driver, "dashboard");
-        Waits.waitForLoaderToDisappear(driver);
     }
 
-    @Step("Attempt login as {username} expecting rejection")
-    public void loginExpectingFailure(String username, String password) {
-        enterUsername(username);
-        enterPassword(password);
-        submit();
+    @Step("Log in with the configured credentials and wait for the dashboard")
+    public void loginWithValidCredentials() {
+        loginAs(Config.getInstance().getUsername(), Config.getInstance().getPassword());
+        Waits.waitForUrlContains(driver, "dashboard");
+        Waits.waitForLoaderToDisappear(driver);
     }
 
     public boolean isStillOnLoginPage() {
